@@ -26,6 +26,7 @@ npm run dev
 | `npm run format`          | Prettier write        |
 | `npm run prisma:generate` | Prisma Client         |
 
-## Health
+## Routes
 
-`GET /health` → JSON `{ status, timestamp }`.
+- `GET /` — service name and pointer to health
+- `GET /health` — JSON `{ status, timestamp }`

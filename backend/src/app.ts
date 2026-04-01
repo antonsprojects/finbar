@@ -10,6 +10,11 @@ export async function buildApp() {
 
   await app.register(sensible);
 
+  app.get("/", async () => ({
+    service: "finbar-api",
+    health: "/health",
+  }));
+
   app.get("/health", async () => ({
     status: "ok",
     timestamp: new Date().toISOString(),
