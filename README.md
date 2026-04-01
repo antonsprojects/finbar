@@ -26,11 +26,13 @@ Invoicing, document management, chat, CRM, advanced reporting, offline-first com
 
 Full sequence (Postgres, ports, env files): **[docs/local-development.md](docs/local-development.md)**.
 
-Short version:
+Short version (see [docs/local-development.md](docs/local-development.md) for paths):
 
-1. **Database:** from repo root, `npm run db:up` (Docker Compose Postgres on **5432**).
-2. **Backend:** [`backend/README.md`](backend/README.md) — env, `npm install`, `npm run prisma:generate`, `npm run dev` → [http://localhost:3000/health](http://localhost:3000/health).
-3. **Frontend:** [`frontend/README.md`](frontend/README.md) — env, `npm install`, `npm run dev` → [http://localhost:5173](http://localhost:5173).
+1. **Database:** from **repo root**, `npm run db:up` (Postgres on **5432**). Not from `backend/`.
+2. **Backend:** in `backend/`: copy `.env.example` → `.env`, then `npm install`, `npm run prisma:generate`, `npm run dev`. Or from root: `npm run dev:api`.
+3. **Frontend:** in `frontend/`: copy `.env.example` → `.env`, then `npm install`, `npm run dev`. Or from root: `npm run dev:web`.
+
+Do not put `npm run dev` at repo root (no script there). When copying `cp` commands, do not add words after `.env` on the same line unless the line starts with `#`.
 
 ## Branch strategy
 
