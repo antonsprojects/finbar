@@ -1,0 +1,52 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+dist/
+build/
+out/
+*.local
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# IDE / editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Python (common for APIs)
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.Python
+
+# Testing / coverage
+coverage/
+.nyc_output/
+*.lcov
+
+# Misc secrets / certs
+*.pem
+
+# Turbo / caches (if added later)
+.turbo/
+.cache/
