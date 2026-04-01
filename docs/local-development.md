@@ -18,7 +18,7 @@ There is **no** `npm run dev` at the repository root unless you add your own too
 | ---------- | ---- | ------------------------------------------ |
 | Frontend   | 5173 | Vite dev server (`frontend/`)              |
 | Backend API | 3000 | Fastify (`backend/`)                      |
-| PostgreSQL | 5432 | Docker Compose service `postgres`          |
+| PostgreSQL | **5432** (default) | Published host port; override with `FINBAR_PG_PUBLISH_PORT` in repo-root `.env` if 5432 is taken |
 
 ## Prerequisites
 
@@ -34,10 +34,13 @@ There is **no** `npm run dev` at the repository root unless you add your own too
 
    ```bash
    cd /path/to/Finbar
+   cp .env.example .env
    npm run db:up
    ```
 
-   Do not append shell comments to `package.json` script lines. The script must be exactly `docker compose up -d postgres` inside `"db:up"`.
+   If **`address already in use` on port 5432**, another Postgres is running on your Mac. In repo-root `.env` set `FINBAR_PG_PUBLISH_PORT=5433` (or any free port), set the same port in `backend/.env` inside `DATABASE_URL`, then run `docker compose down` and `npm run db:up` again. See **Troubleshooting** below.
+
+   Do not append shell comments to `package.json` script lines.
 
    Wait until the container is healthy (`docker compose ps` shows `healthy`).
 
@@ -110,5 +113,5 @@ If the API runs inside Compose, use hostname `postgres` in `DATABASE_URL` instea
 - **`Missing script: "dev"`** at repo root: use `npm run dev:api`, `npm run dev:web`, or `cd backend` / `cd frontend` then `npm run dev`.
 - **`cp: only: Not a directory`:** you pasted text after `.env` on the same line without a leading `#`, so the shell ran something like `cp .env.example .env first time only`. Use only: `cp .env.example .env` (and put notes on the **next** line, or use a line that starts with `#`).
 - **`no such service: #` from `npm run db:up`:** root `package.json` has a stray `# …` inside the `"db:up"` value (often from copy-paste). It must be exactly: `"docker compose up -d postgres"` with no `#`.
-- **Port 5432 in use:** stop the other Postgres, or map a different host port, e.g. in `docker-compose.yml` use `"5433:5432"` and set `DATABASE_URL=postgresql://finbar:finbar@localhost:5433/finbar`.
+- **Port 5432 in use (`bind: address already in use`):** (1) Stop the other service, e.g. `brew services list` then `brew services stop postgresql@16` (name varies), or quit Postgres.app. **Or** (2) keep it and use another host port: create or edit repo-root `.env` with `FINBAR_PG_PUBLISH_PORT=5433`, set `DATABASE_URL=postgresql://finbar:finbar@localhost:5433/finbar` in `backend/.env`, then `docker compose down` and `npm run db:up`. To see what holds 5432: `lsof -nP -iTCP:5432 | grep LISTEN`.
 - **Prisma cannot connect:** ensure `npm run db:up` finished and `pg_isready` is happy; check `backend/.env` matches Compose credentials.

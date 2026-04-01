@@ -4,7 +4,8 @@ services:
     container_name: finbar-postgres
     restart: unless-stopped
     ports:
-      - "5432:5432"
+      # Host port from repo-root `.env` (FINBAR_PG_PUBLISH_PORT); default 5432.
+      - "${FINBAR_PG_PUBLISH_PORT:-5432}:5432"
     environment:
       POSTGRES_USER: finbar
       POSTGRES_PASSWORD: finbar
