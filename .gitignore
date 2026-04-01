@@ -16,7 +16,8 @@ out/
 
 # IDE / editor
 .idea/
-.vscode/
+# Ignore only repo-root workspace settings; allow e.g. frontend/.vscode/settings.json
+/.vscode/
 *.swp
 *.swo
 *~
