@@ -26,7 +26,7 @@ Invoicing, document management, chat, CRM, advanced reporting, offline-first com
 
 1. Clone the repository.
 2. **Backend:** see [`backend/README.md`](backend/README.md) — `cp .env.example .env`, `npm install`, `npm run prisma:generate`, `npm run dev`; then open `GET http://localhost:3000/health`.
-3. **Frontend:** Block 04 (not bootstrapped yet).
+3. **Frontend:** see [`frontend/README.md`](frontend/README.md) — `cp .env.example .env`, `npm install`, `npm run dev` (default [http://localhost:5173](http://localhost:5173)).
 
 ## Branch strategy
 
