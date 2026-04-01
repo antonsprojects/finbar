@@ -26,15 +26,15 @@ There is **no** `npm run dev` at the repository root unless you add your own too
 
 Use this when **Postgres is already running** for another project on your machine. Create a **separate login and database** for Finbar so nothing is shared except the server process.
 
-1. Connect as a superuser (name varies), for example:
+1. Connect as a superuser. On Homebrew Postgres this is usually the **`postgres`** role:
 
    ```bash
    psql -U postgres -h localhost -d postgres
    ```
 
-   Or with Homebrew: `psql postgres` sometimes works.
+   **Why `psql postgres` can fail:** if you run `psql` with no `-U`, it uses your **macOS username** as the Postgres role name (e.g. `antonbensdorp`). That role may not exist in Postgres — roles are separate from macOS accounts. Prefer `-U postgres` and the password you set for that role when you installed Postgres.
 
-2. Run (pick your own password; keep it out of git):
+2. At the `postgres=#` prompt, run SQL (**not** in zsh — `CREATE USER` is not a shell command):
 
    ```sql
    CREATE USER finbar WITH PASSWORD 'your_finbar_password';
