@@ -4,9 +4,10 @@ Node.js + TypeScript + Fastify API. See [docs/adr](../docs/adr/) for stack decis
 
 ## Setup
 
+Start Postgres from the **repository root** (`npm run db:up`) unless you use your own instance. See [docs/local-development.md](../docs/local-development.md).
+
 ```bash
 cp .env.example .env
-# Adjust DATABASE_URL if needed (Postgres required in .env for Prisma CLI).
 npm install
 npm run prisma:generate
 npm run dev

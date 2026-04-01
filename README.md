@@ -24,9 +24,13 @@ Invoicing, document management, chat, CRM, advanced reporting, offline-first com
 
 ## Getting started
 
-1. Clone the repository.
-2. **Backend:** see [`backend/README.md`](backend/README.md) — `cp .env.example .env`, `npm install`, `npm run prisma:generate`, `npm run dev`; then open `GET http://localhost:3000/health`.
-3. **Frontend:** see [`frontend/README.md`](frontend/README.md) — `cp .env.example .env`, `npm install`, `npm run dev` (default [http://localhost:5173](http://localhost:5173)).
+Full sequence (Postgres, ports, env files): **[docs/local-development.md](docs/local-development.md)**.
+
+Short version:
+
+1. **Database:** from repo root, `npm run db:up` (Docker Compose Postgres on **5432**).
+2. **Backend:** [`backend/README.md`](backend/README.md) — env, `npm install`, `npm run prisma:generate`, `npm run dev` → [http://localhost:3000/health](http://localhost:3000/health).
+3. **Frontend:** [`frontend/README.md`](frontend/README.md) — env, `npm install`, `npm run dev` → [http://localhost:5173](http://localhost:5173).
 
 ## Branch strategy
 

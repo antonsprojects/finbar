@@ -1,6 +1,6 @@
 # Finbar frontend
 
-Vue 3 + TypeScript + Vite + Vue Router + Pinia + Tailwind CSS v4. See [`docs/adr`](../docs/adr/).
+Vue 3 + TypeScript + Vite + Vue Router + Pinia + Tailwind CSS v4. See [`docs/adr`](../docs/adr/) and [local development](../docs/local-development.md).
 
 ## Setup
 
