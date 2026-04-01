@@ -3,9 +3,9 @@
   "private": true,
   "description": "Root scripts for local orchestration (see docs/local-development.md)",
   "scripts": {
-    "db:up": "docker compose up -d",
+    "db:up": "docker compose up -d postgres",
     "db:down": "docker compose down",
     "db:logs": "docker compose logs -f postgres",
-    "db:reset": "docker compose down -v && docker compose up -d"
+    "db:reset": "docker compose down -v && docker compose up -d postgres"
   }
 }

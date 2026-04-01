@@ -20,11 +20,14 @@ Predictable ports and a single Postgres container for the Finbar stack.
 
 1. **Start Postgres**
 
-   From the repository root:
+   From the repository root (the folder that contains `docker-compose.yml` and `package.json`):
 
    ```bash
+   cd /path/to/Finbar
    npm run db:up
    ```
+
+   Do not append shell comments to `package.json` script lines. The script must be exactly `docker compose up -d postgres` inside `"db:up"`.
 
    Wait until the container is healthy (`docker compose ps` shows `healthy`).
 
@@ -87,5 +90,6 @@ If the API runs inside Compose, use hostname `postgres` in `DATABASE_URL` instea
 
 ## Troubleshooting
 
+- **`no such service: #` from `npm run db:up`:** root `package.json` has a stray `# …` inside the `"db:up"` value (often from copy-paste). It must be exactly: `"docker compose up -d postgres"` with no `#`.
 - **Port 5432 in use:** stop the other Postgres, or map a different host port, e.g. in `docker-compose.yml` use `"5433:5432"` and set `DATABASE_URL=postgresql://finbar:finbar@localhost:5433/finbar`.
 - **Prisma cannot connect:** ensure `npm run db:up` finished and `pg_isready` is happy; check `backend/.env` matches Compose credentials.
