@@ -17,7 +17,7 @@ There is **no** `npm run dev` at the repository root unless you add your own too
 | Service     | Port | Notes |
 | ----------- | ---- | ----- |
 | Frontend    | 5173 | Vite dev server (`frontend/`) |
-| Backend API | 3000 | Fastify (`backend/`) |
+| Backend API | **3001** (default; override with `PORT` in `backend/.env`) | Fastify (`backend/`) — avoids sharing **3000** with other local apps |
 | PostgreSQL  | your server’s port (often **5432**) | Same host as your other project if you use one Postgres instance |
 
 ---
@@ -128,7 +128,7 @@ Default Compose credentials: user `finbar`, password `finbar`, database `finbar`
 Then open:
 
 - App: [http://localhost:5173](http://localhost:5173)
-- API health: [http://localhost:3000/health](http://localhost:3000/health)
+- API health: [http://localhost:3001/health](http://localhost:3001/health)
 
 ## Root npm scripts
 
@@ -143,7 +143,7 @@ Then open:
 
 ## Frontend → API
 
-- **Browser calls:** set `VITE_API_BASE_URL` in `frontend/.env` (default `http://127.0.0.1:3000`).
+- **Browser calls:** set `VITE_API_BASE_URL` in `frontend/.env` (default `http://127.0.0.1:3001`).
 - **Vite proxy:** `frontend/vite.config.ts` proxies `/api` to the backend for same-origin requests during dev.
 
 ## Running the backend in Docker (optional, later)
@@ -152,6 +152,7 @@ If the API runs inside Compose, use hostname `postgres` in `DATABASE_URL` instea
 
 ## Troubleshooting
 
+- **Another app uses the API port (e.g. Pasty on 3000):** Finbar defaults to **`PORT=3001`** in `backend/.env`. Set `VITE_API_BASE_URL=http://127.0.0.1:3001` in `frontend/.env`. If you still have `PORT=3000` from an older copy, change it to `3001` or any free port.
 - **`Missing script: "db:up"`** while in `backend/` or `frontend/`: run `npm run db:up` from the **repository root** only (that is where the script is defined). If you use **option A**, you do not need this script.
 - **`Missing script: "dev"`** at repo root: use `npm run dev:api`, `npm run dev:web`, or `cd backend` / `cd frontend` then `npm run dev`.
 - **`cp: only: Not a directory`:** you pasted text after `.env` on the same line without a leading `#`, so the shell ran something like `cp .env.example .env first time only`. Use only: `cp .env.example .env` (and put notes on the **next** line, or use a line that starts with `#`).

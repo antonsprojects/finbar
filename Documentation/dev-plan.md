@@ -196,7 +196,7 @@ Make local development predictable.
 
 ## Example local services
 - frontend: `5173`
-- backend: `3000`
+- backend: `3001` (Finbar default; configurable via `PORT` in `backend/.env`)
 - postgres: `5432`
 
 ## Deliverables

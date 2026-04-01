@@ -1,5 +1,5 @@
 /** Backend origin for `fetch` (no trailing slash). */
-const DEFAULT_API = "http://127.0.0.1:3000";
+const DEFAULT_API = "http://127.0.0.1:3001";
 
 function trimTrailingSlashes(s: string): string {
   return s.replace(/\/+$/, "");

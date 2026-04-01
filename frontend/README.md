@@ -16,13 +16,13 @@ Open [http://localhost:5173](http://localhost:5173). Routes: `/login`, `/today`,
 
 | Variable            | Purpose                                                          |
 | ------------------- | ---------------------------------------------------------------- |
-| `VITE_API_BASE_URL` | Backend origin (no trailing slash), e.g. `http://127.0.0.1:3000` |
+| `VITE_API_BASE_URL` | Backend origin (no trailing slash), e.g. `http://127.0.0.1:3001` |
 
-If unset in development, the app falls back to `http://127.0.0.1:3000` and logs a warning.
+If unset in development, the app falls back to `http://127.0.0.1:3001` and logs a warning.
 
 ## Dev proxy
 
-`vite.config.ts` proxies `/api/*` to `http://127.0.0.1:3000` with the `/api` prefix stripped, so you can call `fetch('/api/health')` during local development without CORS.
+`vite.config.ts` proxies `/api/*` to `http://127.0.0.1:3001` with the `/api` prefix stripped, so you can call `fetch('/api/health')` during local development without CORS.
 
 ## Scripts
 
