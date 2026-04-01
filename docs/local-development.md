@@ -101,15 +101,17 @@ Default Compose credentials: user `finbar`, password `finbar`, database `finbar`
 
    Put **`#` comments on their own line** in the shell. If you run `cp .env.example .env first time only` (without `#`), the shell passes extra words to `cp` and you get errors like `cp: only: Not a directory`.
 
-2. **Backend install & Prisma client**
+2. **Backend install, Prisma, migrations, seed**
 
    ```bash
    cd backend
    npm install
    npm run prisma:generate
+   npm run db:migrate
+   npm run db:seed
    ```
 
-   After Block 06 lands, run migrations here (e.g. `npx prisma migrate dev`).
+   If `db:migrate` fails (e.g. no permission to create a shadow database), apply with `npx prisma migrate deploy` using a user that can run DDL, then `npm run db:seed`.
 
 3. **Frontend env**
 

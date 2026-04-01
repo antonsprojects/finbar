@@ -19,7 +19,7 @@ All business rows are owned by a single **User** account (Finbar today; multi-te
 | **Worker** | Freelancer or crew member: contact, trade, notes. |
 | **Task** | Work item, usually tied to a job; status; optional `assignedWorkerId`; optional `scheduledDate`. |
 | **ScheduleAssignment** | **Who works which job on which calendar day**—separate from task assignment. |
-| **WorkerAvailability** | Per worker per date: available / unavailable / other agreed enum. |
+| **WorkerAvailability** | Per worker per date: **`AVAILABLE` \| `UNAVAILABLE`** only (not “booked”). |
 | **UserPreference** | e.g. `largeTextMode`, preferred default view. |
 
 **Rule:** Keep **schedule assignment** (worker ↔ job ↔ day) **separate** from **task** assignment. Do not merge these concepts in the schema without a new ADR.

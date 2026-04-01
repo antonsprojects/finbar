@@ -283,7 +283,7 @@ Define the first usable relational model.
 - userId
 - workerId
 - date
-- status (`available`, `unavailable`, `booked` is possible, but think carefully)
+- status — **`AVAILABLE` | `UNAVAILABLE` only** (no `booked`; planning uses `ScheduleAssignment`)
 - notes
 
 ### UserPreference
