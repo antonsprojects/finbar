@@ -25,9 +25,8 @@ Invoicing, document management, chat, CRM, advanced reporting, offline-first com
 ## Getting started
 
 1. Clone the repository.
-2. After Blocks 03–04 land, use setup steps from each package’s README.
-
-Until then, this repo holds structure and documentation only.
+2. **Backend:** see [`backend/README.md`](backend/README.md) — `cp .env.example .env`, `npm install`, `npm run prisma:generate`, `npm run dev`; then open `GET http://localhost:3000/health`.
+3. **Frontend:** Block 04 (not bootstrapped yet).
 
 ## Branch strategy
 

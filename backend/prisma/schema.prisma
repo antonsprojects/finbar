@@ -1,0 +1,9 @@
+// Block 06 expands this schema. Datasource is required for Prisma tooling.
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
