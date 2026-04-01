@@ -28,7 +28,7 @@ Full sequence (Postgres, ports, env files): **[docs/local-development.md](docs/l
 
 Short version (see [docs/local-development.md](docs/local-development.md) for paths):
 
-1. **Database:** from **repo root**, `npm run db:up` (Postgres on **5432**). Not from `backend/`.
+1. **Database:** either create a **dedicated Postgres user + database** on your existing server, and put that in `backend/.env` → `DATABASE_URL`, **or** use Docker from repo root: `npm run db:up` (optional).
 2. **Backend:** in `backend/`: copy `.env.example` → `.env`, then `npm install`, `npm run prisma:generate`, `npm run dev`. Or from root: `npm run dev:api`.
 3. **Frontend:** in `frontend/`: copy `.env.example` → `.env`, then `npm install`, `npm run dev`. Or from root: `npm run dev:web`.
 

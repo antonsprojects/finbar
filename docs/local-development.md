@@ -1,12 +1,12 @@
 # Local development
 
-Predictable ports and a single Postgres container for the Finbar stack.
+Predictable ports for the Finbar stack. **Postgres can be either** a dedicated role/database on **your existing server** (recommended if you already run Postgres) **or** the Docker Compose service below.
 
 ## Where to run commands
 
 | What you want              | Working directory        |
 | -------------------------- | ------------------------ |
-| `npm run db:up` / `db:*`   | **Repository root** (next to `docker-compose.yml`) |
+| `npm run db:up` / `db:*`   | **Repository root** — only if you use **Docker** for Postgres |
 | `npm run dev` (API)        | **`backend/`** — or from root: `npm run dev:api` |
 | `npm run dev` (Vite UI)    | **`frontend/`** — or from root: `npm run dev:web` |
 
@@ -14,37 +14,82 @@ There is **no** `npm run dev` at the repository root unless you add your own too
 
 ## Ports
 
-| Service    | Port | Notes                                      |
-| ---------- | ---- | ------------------------------------------ |
-| Frontend   | 5173 | Vite dev server (`frontend/`)              |
-| Backend API | 3000 | Fastify (`backend/`)                      |
-| PostgreSQL | **5432** (default) | Published host port; override with `FINBAR_PG_PUBLISH_PORT` in repo-root `.env` if 5432 is taken |
+| Service     | Port | Notes |
+| ----------- | ---- | ----- |
+| Frontend    | 5173 | Vite dev server (`frontend/`) |
+| Backend API | 3000 | Fastify (`backend/`) |
+| PostgreSQL  | your server’s port (often **5432**) | Same host as your other project if you use one Postgres instance |
+
+---
+
+## Postgres option A — Dedicated role and database (existing server)
+
+Use this when **Postgres is already running** for another project on your machine. Create a **separate login and database** for Finbar so nothing is shared except the server process.
+
+1. Connect as a superuser (name varies), for example:
+
+   ```bash
+   psql -U postgres -h localhost -d postgres
+   ```
+
+   Or with Homebrew: `psql postgres` sometimes works.
+
+2. Run (pick your own password; keep it out of git):
+
+   ```sql
+   CREATE USER finbar WITH PASSWORD 'your_finbar_password';
+   CREATE DATABASE finbar OWNER finbar;
+   ```
+
+3. Optional: if you use PG 15+ and hit permission errors on `public` later, as superuser:
+
+   ```sql
+   \c finbar
+   GRANT ALL ON SCHEMA public TO finbar;
+   ```
+
+4. In **`backend/.env`**, set:
+
+   ```env
+   DATABASE_URL=postgresql://finbar:your_finbar_password@localhost:5432/finbar
+   ```
+
+   Use your real host/port if Postgres is not on `localhost:5432`.
+
+5. You **do not** need `npm run db:up` or Docker for the database. Keep your existing Postgres service running (e.g. `brew services`).
+
+---
+
+## Postgres option B — Docker Compose
+
+Use this when you want an isolated Postgres **only for Finbar** (no local server).
+
+From the repository root:
+
+```bash
+cd /path/to/Finbar
+cp .env.example .env
+npm run db:up
+```
+
+If **`address already in use` on port 5432**, another Postgres is bound there. In repo-root `.env` set `FINBAR_PG_PUBLISH_PORT=5433`, set the same port in `backend/.env` inside `DATABASE_URL`, then `docker compose down` and `npm run db:up` again. See **Troubleshooting**.
+
+Wait until the container is healthy (`docker compose ps` shows `healthy`).
+
+Default Compose credentials: user `finbar`, password `finbar`, database `finbar`.
+
+---
 
 ## Prerequisites
 
 - **Node.js** 20+ (20.19+ recommended for latest Vite; 20.17 works with pinned Vite 6 in `frontend/`)
-- **Docker** with Compose v2 (`docker compose`)
+- **PostgreSQL** reachable from your machine — either **option A** or **option B** above
+- **Docker** with Compose v2 — **only** if you use **option B**
 - **npm** (ships with Node)
 
-## First-time setup
+## First-time setup (application)
 
-1. **Start Postgres**
-
-   From the repository root (the folder that contains `docker-compose.yml` and `package.json`):
-
-   ```bash
-   cd /path/to/Finbar
-   cp .env.example .env
-   npm run db:up
-   ```
-
-   If **`address already in use` on port 5432**, another Postgres is running on your Mac. In repo-root `.env` set `FINBAR_PG_PUBLISH_PORT=5433` (or any free port), set the same port in `backend/.env` inside `DATABASE_URL`, then run `docker compose down` and `npm run db:up` again. See **Troubleshooting** below.
-
-   Do not append shell comments to `package.json` script lines.
-
-   Wait until the container is healthy (`docker compose ps` shows `healthy`).
-
-2. **Backend env**
+1. **Backend env**
 
    From repo root:
 
@@ -52,11 +97,11 @@ There is **no** `npm run dev` at the repository root unless you add your own too
    cp backend/.env.example backend/.env
    ```
 
+   Edit `backend/.env` and set **`DATABASE_URL`** to match **option A** (your new role/database) or **option B** (Docker URL and port).
+
    Put **`#` comments on their own line** in the shell. If you run `cp .env.example .env first time only` (without `#`), the shell passes extra words to `cp` and you get errors like `cp: only: Not a directory`.
 
-   Default `DATABASE_URL` matches Compose (`finbar` / `finbar` / database `finbar` on `localhost:5432`).
-
-3. **Backend install & Prisma client**
+2. **Backend install & Prisma client**
 
    ```bash
    cd backend
@@ -66,7 +111,7 @@ There is **no** `npm run dev` at the repository root unless you add your own too
 
    After Block 06 lands, run migrations here (e.g. `npx prisma migrate dev`).
 
-4. **Frontend env**
+3. **Frontend env**
 
    ```bash
    cd ../frontend
@@ -76,11 +121,9 @@ There is **no** `npm run dev` at the repository root unless you add your own too
 
 ## Daily startup
 
-In three terminals (or use a terminal multiplexer). All `db:*` commands run from **repo root**.
-
-1. Database (if not already running), from repo root: `npm run db:up`
-2. API: either `cd backend && npm run dev` **or** from repo root: `npm run dev:api`
-3. UI: either `cd frontend && npm run dev` **or** from repo root: `npm run dev:web`
+1. **Postgres:** ensure it is running — your OS service (option A) or `npm run db:up` (option B).
+2. **API:** `cd backend && npm run dev` **or** from repo root: `npm run dev:api`
+3. **UI:** `cd frontend && npm run dev` **or** from repo root: `npm run dev:web`
 
 Then open:
 
@@ -91,12 +134,12 @@ Then open:
 
 | Script               | Action                                      |
 | -------------------- | ------------------------------------------- |
-| `npm run db:up`      | Start Postgres in the background            |
-| `npm run db:down`    | Stop Postgres (keeps the named volume)      |
-| `npm run db:logs`    | Follow Postgres logs                        |
+| `npm run db:up`      | Start Docker Postgres (option B only)       |
+| `npm run db:down`    | Stop Docker Postgres                          |
+| `npm run db:logs`    | Follow Docker Postgres logs                 |
 | `npm run db:reset`   | **Destructive:** remove volume and recreate |
-| `npm run dev:api`    | Run backend dev server (same as `cd backend && npm run dev`) |
-| `npm run dev:web`    | Run frontend dev server (same as `cd frontend && npm run dev`) |
+| `npm run dev:api`    | Run backend dev server                      |
+| `npm run dev:web`    | Run frontend dev server                     |
 
 ## Frontend → API
 
@@ -109,9 +152,9 @@ If the API runs inside Compose, use hostname `postgres` in `DATABASE_URL` instea
 
 ## Troubleshooting
 
-- **`Missing script: "db:up"`** while in `backend/` or `frontend/`: run `npm run db:up` from the **repository root** only (that is where the script is defined).
+- **`Missing script: "db:up"`** while in `backend/` or `frontend/`: run `npm run db:up` from the **repository root** only (that is where the script is defined). If you use **option A**, you do not need this script.
 - **`Missing script: "dev"`** at repo root: use `npm run dev:api`, `npm run dev:web`, or `cd backend` / `cd frontend` then `npm run dev`.
 - **`cp: only: Not a directory`:** you pasted text after `.env` on the same line without a leading `#`, so the shell ran something like `cp .env.example .env first time only`. Use only: `cp .env.example .env` (and put notes on the **next** line, or use a line that starts with `#`).
 - **`no such service: #` from `npm run db:up`:** root `package.json` has a stray `# …` inside the `"db:up"` value (often from copy-paste). It must be exactly: `"docker compose up -d postgres"` with no `#`.
-- **Port 5432 in use (`bind: address already in use`):** (1) Stop the other service, e.g. `brew services list` then `brew services stop postgresql@16` (name varies), or quit Postgres.app. **Or** (2) keep it and use another host port: create or edit repo-root `.env` with `FINBAR_PG_PUBLISH_PORT=5433`, set `DATABASE_URL=postgresql://finbar:finbar@localhost:5433/finbar` in `backend/.env`, then `docker compose down` and `npm run db:up`. To see what holds 5432: `lsof -nP -iTCP:5432 | grep LISTEN`.
-- **Prisma cannot connect:** ensure `npm run db:up` finished and `pg_isready` is happy; check `backend/.env` matches Compose credentials.
+- **Port 5432 in use when starting Docker (option B):** use `FINBAR_PG_PUBLISH_PORT` in repo-root `.env` and match `DATABASE_URL` in `backend/.env`, or stop the conflicting service. See **Postgres option B** above. To see what holds 5432: `lsof -nP -iTCP:5432 | grep LISTEN`.
+- **Prisma cannot connect:** check `DATABASE_URL` in `backend/.env` (user, password, host, port, database name). For option A, confirm `psql "$DATABASE_URL"` works.

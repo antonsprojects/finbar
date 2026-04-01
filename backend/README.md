@@ -2,11 +2,11 @@
 
 Node.js + TypeScript + Fastify API. See [docs/adr](../docs/adr/) for stack decisions.
 
-`npm run db:up` does **not** exist in this folder — it is defined only in the **parent** `package.json`. From repo root run `npm run db:up`, or use your own Postgres.
+`npm run db:up` does **not** exist in this folder — it is defined only in the **parent** `package.json`, and only if you use **Docker** for Postgres.
 
 ## Setup
 
-Start Postgres from the **repository root** (`npm run db:up`) unless you use your own instance. See [docs/local-development.md](../docs/local-development.md).
+Prefer a **dedicated Postgres user + database** on your existing server, and set `DATABASE_URL` in `.env`. Alternatively start Postgres via Docker from repo root: `npm run db:up`. See [docs/local-development.md](../docs/local-development.md).
 
 ```bash
 cp .env.example .env
