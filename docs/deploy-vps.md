@@ -6,7 +6,9 @@ Korte route voor o.a. `finbar.diversepersonality.com` op je eigen server met **D
 
 - **DNS:** A-record (of AAAA) voor `finbar.diversepersonality.com` → IP van de VPS.
 - **Docker** + **Docker Compose plugin** geïnstalleerd.
-- **Reverse proxy (TLS):** Caddy of Nginx vóór de app. Zie `deploy/Caddyfile.example`: proxy naar `127.0.0.1:8080` (of de poort in `FINBAR_PUBLISH_PORT`).
+- **Reverse proxy (TLS):** Nginx of Caddy vóór de app.
+  - **Nginx:** voorbeeldbestand `deploy/nginx/finbar.conf.example` (proxy naar `127.0.0.1:8080` of `FINBAR_PUBLISH_PORT`).
+  - **Caddy:** `deploy/Caddyfile.example`.
 
 Repository op de server (bijv.):
 
@@ -20,7 +22,7 @@ nano .env   # wachtwoorden, JWT_SECRET (≥32 tekens), PUBLIC_APP_URL, DATABASE_
 
 Zet in `.env` o.a.:
 
-- `FINBAR_IMAGE` = exact het image dat CI pusht, bijv. `ghcr.io/jouwhandle/finbar:latest` (GitHub-naam in **kleine letters**).
+- `FINBAR_IMAGE` = exact het image dat CI pusht, bijv. `ghcr.io/antonsprojects/finbar:latest` (org/repo **kleine letters**, zoals op ghcr).
 - `DATABASE_URL` = `postgresql://finbar:HETZELFDE_WACHTWOORD@postgres:5432/finbar` (hostnaam `postgres` = servicenaam in Compose).
 - `POSTGRES_PASSWORD` = hetzelfde wachtwoord als in `DATABASE_URL`.
 - `JWT_SECRET` = minstens 32 willekeurige tekens in productie.
@@ -30,22 +32,36 @@ Eerste start:
 
 ```bash
 cd /opt/finbar
-export FINBAR_IMAGE=ghcr.io/jouwhandle/finbar:latest
+export FINBAR_IMAGE=ghcr.io/antonsprojects/finbar:latest
 FINBAR_IMAGE="$FINBAR_IMAGE" docker compose -f deploy/compose.production.yaml up -d
 ```
 
 *(Of log in op ghcr om een privé-image te pullen, zie §3.)*
 
-## 2. GitHub Actions: image bouwen
+## 2. GitHub Actions: build + deploy (push → deploy)
 
 De workflow **Build & deploy** (`.github/workflows/deploy.yml`):
 
-- Bouwt de image en pusht naar `ghcr.io/<jouw-github-org-of-user>/<reponaam-kleine-letters>:latest` bij elke push naar `main`.
-- Deploy naar de VPS draait **alleen** als:
-  - je **handmatig** “Run workflow” kiest, **of**
-  - je in GitHub **Settings → Secrets and variables → Actions → Variables** de variabele `ENABLE_VPS_DEPLOY` op `true` zet (dan ook bij elke push naar `main`).
+- Bij elke **push naar `main`**: image bouwen en pushen naar `ghcr.io/<org>/<repo>:latest` (alles **kleine letters**).
+- Daarna **automatisch deploy** over SSH: `docker pull` + `docker compose up` in `VPS_DEPLOY_PATH` (standaard `/opt/finbar`).
 
-Zorg dat onder **Settings → Actions → General** de workflow-machtiging “Read and write” voor **packages** aan staat (voor push naar ghcr.io).
+Zorg dat onder **Settings → Actions → General** de workflow-machtiging **Read and write** voor **packages** aanstaat (nodig om naar ghcr.io te pushen).
+
+**Image-URL in `.env` op de server** moet overeenkomen, bijvoorbeeld: `ghcr.io/antonsprojects/finbar:latest` voor repository `antonsprojects/finbar`.
+
+## 2b. Nginx + TLS (subdomein)
+
+1. DNS A-record: `finbar.diversepersonality.com` → IP van de VPS.
+2. Plaats een config op basis van `deploy/nginx/finbar.conf.example` (pas `server_name` en `upstream` poort 8080 aan indien nodig).
+3. **Certbot (Let’s Encrypt), voorbeeld met Nginx-plugin:**
+
+   ```bash
+   sudo apt install -y certbot python3-certbot-nginx
+   sudo certbot --nginx -d finbar.diversepersonality.com
+   ```
+
+   Of eerst alleen HTTP-test zonder certificaat, daarna `certbot` om 443 in te stellen.
+4. Herlaad Nginx: `sudo nginx -t && sudo systemctl reload nginx`
 
 ## 3. GitHub: secrets voor SSH-deploy
 

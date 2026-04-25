@@ -36,7 +36,7 @@ Do not put `npm run dev` at repo root (no script there). When copying `cp` comma
 
 ## Productie (VPS, Docker, GitHub Actions)
 
-Een stappenplan voor o.a. een subdomein op je eigen server met **Docker**, **ghcr.io**, en **SSH-deploy** staat in **[docs/deploy-vps.md](docs/deploy-vps.md)**. Bestanden: `Dockerfile`, `deploy/compose.production.yaml`, `deploy/Caddyfile.example`, `.github/workflows/deploy.yml`.
+Een stappenplan voor o.a. een subdomein op je eigen server met **Docker**, **ghcr.io**, en **push→deploy** staat in **[docs/deploy-vps.md](docs/deploy-vps.md)**. Bestanden: `Dockerfile`, `deploy/compose.production.yaml`, `deploy/nginx/finbar.conf.example`, `deploy/Caddyfile.example`, `.github/workflows/deploy.yml`.
 
 ## Branch strategy
 
