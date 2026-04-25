@@ -16,19 +16,11 @@ Repository op de server (bijv.):
 sudo mkdir -p /opt/finbar && sudo chown "$USER:$USER" /opt/finbar
 cd /opt/finbar
 git clone <jouw-repo-url> .
-cp deploy/.env.production.example .env
-nano .env   # wachtwoorden, JWT_SECRET (≥32 tekens), PUBLIC_APP_URL, DATABASE_URL, FINBAR_IMAGE, …
 ```
 
-Zet in `.env` o.a.:
+**Met GitHub Actions (aanbevolen):** stel in §3 de secrets in (o.a. `FINBAR_POSTGRES_PASSWORD`, `FINBAR_JWT_SECRET`). Bij de eerste (of elke) deploy schrijft de workflow `/opt/finbar/.env` en zet `FINBAR_IMAGE` op het zojuist gebouwde image — je hoeft geen lege `.env` handmatig te vullen.
 
-- `FINBAR_IMAGE` = exact het image dat CI pusht, bijv. `ghcr.io/antonsprojects/finbar:latest` (org/repo **kleine letters**, zoals op ghcr).
-- `DATABASE_URL` = `postgresql://finbar:HETZELFDE_WACHTWOORD@postgres:5432/finbar` (hostnaam `postgres` = servicenaam in Compose).
-- `POSTGRES_PASSWORD` = hetzelfde wachtwoord als in `DATABASE_URL`.
-- `JWT_SECRET` = minstens 32 willekeurige tekens in productie.
-- `PUBLIC_APP_URL` = `https://finbar.diversepersonality.com` (zonder trailing slash).
-
-Eerste start:
+**Zonder CD / handmatig:** `cp deploy/.env.production.example .env` en vul `POSTGRES_PASSWORD`, `DATABASE_URL` (zelfde wachtwoord), `JWT_SECRET` (≥32 teken), `PUBLIC_APP_URL`, `FINBAR_IMAGE` in. Eerste start:
 
 ```bash
 cd /opt/finbar
@@ -36,18 +28,16 @@ export FINBAR_IMAGE=ghcr.io/antonsprojects/finbar:latest
 FINBAR_IMAGE="$FINBAR_IMAGE" docker compose -f deploy/compose.production.yaml up -d
 ```
 
-*(Of log in op ghcr om een privé-image te pullen, zie §3.)*
+*(Bij private ghcr: zie `GHCR_READ_TOKEN` in §3.)*
 
 ## 2. GitHub Actions: build + deploy (push → deploy)
 
 De workflow **Build & deploy** (`.github/workflows/deploy.yml`):
 
 - Bij elke **push naar `main`**: image bouwen en pushen naar `ghcr.io/<org>/<repo>:latest` (alles **kleine letters**).
-- Daarna **automatisch deploy** over SSH: `docker pull` + `docker compose up` in `VPS_DEPLOY_PATH` (standaard `/opt/finbar`).
+- Daarna **automatisch deploy** over SSH: `git pull`, **`.env` op de server genereren** (uit secrets, zie §3), `docker pull` + `docker compose up` in `VPS_DEPLOY_PATH` (standaard `/opt/finbar`).
 
-Zorg dat onder **Settings → Actions → General** de workflow-machtiging **Read and write** voor **packages** aanstaat (nodig om naar ghcr.io te pushen).
-
-**Image-URL in `.env` op de server** moet overeenkomen, bijvoorbeeld: `ghcr.io/antonsprojects/finbar:latest` voor repository `antonsprojects/finbar`.
+Zorg dat onder **Settings → Actions → General** de workflow-machtiging **Read and write** voor **packages** aanstaat (nodig om naar ghcr.io te pushen). De image-URL in de gegenereerde `.env` is altijd de tag die in diezelfde run is gepusht.
 
 ## 2b. Nginx + TLS (subdomein)
 
@@ -63,18 +53,29 @@ Zorg dat onder **Settings → Actions → General** de workflow-machtiging **Rea
    Of eerst alleen HTTP-test zonder certificaat, daarna `certbot` om 443 in te stellen.
 4. Herlaad Nginx: `sudo nginx -t && sudo systemctl reload nginx`
 
-## 3. GitHub: secrets voor SSH-deploy
+## 3. GitHub: secrets (SSH + `.env` op de server)
 
-| Secret | Inhoud |
-|--------|--------|
-| `VPS_HOST` | Hostnaam of IP van de VPS |
-| `VPS_USER` | SSH-gebruiker |
-| `VPS_SSH_KEY` | Private key (inhoud `~/.ssh/id_ed25519`) |
-| `VPS_DEPLOY_PATH` | Optioneel, standaard `/opt/finbar` — pad waar de repo (met `deploy/compose.production.yaml`) staat |
-| `GHCR_READ_TOKEN` | Alleen als het package op ghcr **privé** is: PAT met `read:packages` om `docker pull` te doen op de server |
-| `VPS_SSH_KEY_PASSPHRASE` | Alleen als de SSH-key met passphrase is beveiligd |
+Gebruik **of** *repository secrets* (Settings → Actions → *Repository* secrets) **of** *environment* **production** (Settings → Environments). De deploy-job in `.github/workflows/deploy.yml` heeft `environment: production` — zet VPS- en `FINBAR_*`-geheimen dáár of als **repository** secrets; **alleen** in een *andere* environment-naam (zonder workflow aan te passen) levert geen `VPS_HOST` en faalt deploy met *missing server host*.
 
-Bij publieke image `finbar` op ghcr is **geen** `GHCR_READ_TOKEN` nodig als pull zonder login mag.
+*Optioneel: voor environment `production` wacht- of goedkeuringsregels kunnen het deploystap pauzeren tot iemand in GitHub de run goedkeurt.*
+
+| Secret | Verplicht? | Inhoud |
+|--------|------------|--------|
+| `VPS_HOST` | ja | Hostnaam of IP van de VPS (ssh-doel) |
+| `VPS_USER` | ja | SSH-gebruiker |
+| `VPS_SSH_KEY` | ja | Private key (bijv. `~/.ssh/id_ed25519` inhoud) |
+| `VPS_SSH_KEY_PASSPHRASE` | nee | Alleen als de SSH-key een passphrase heeft |
+| `VPS_DEPLOY_PATH` | nee | Standaard `/opt/finbar` — pad met repo + `deploy/compose.production.yaml` |
+| `FINBAR_POSTGRES_PASSWORD` | **ja** | Wachtwoord voor Postgres in het Finbar-compose; workflow bouwt `DATABASE_URL` (URL-encoded) en zet `POSTGRES_PASSWORD` |
+| `FINBAR_JWT_SECRET` | **ja** | Minimaal 32 willekeurige tekens; geen regeleindes in de secret |
+| `FINBAR_PUBLIC_APP_URL` | nee | Standaard `https://finbar.diversepersonality.com` — zet alleen om af te wijken |
+| `FINBAR_RESEND_API_KEY` | nee | Optioneel, Resend (wachtwoord-reset e-mail) |
+| `FINBAR_RESEND_FROM` | nee | Optioneel, bijv. `Finbar <noreply@domein.tld>` (alleen zinvol met API-key) |
+| `GHCR_READ_TOKEN` | nee | Alleen als het ghcr-package **privé** is: PAT met `read:packages` voor `docker pull` op de server |
+
+Bij een **publiek** `finbar`-package op ghcr is **geen** `GHCR_READ_TOKEN` nodig.
+
+Elke geslaagde deploy **overschrijft** `/opt/finbar/.env`. Lokale wijzigingen in `.env` op de server gaan dus verloren; voeg waarden of veranderingen in GitHub secrets toe of pas de workflow aan.
 
 ## 4. Lokaal dezelfde image testen (optioneel)
 
