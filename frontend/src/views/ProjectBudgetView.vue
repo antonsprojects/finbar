@@ -289,7 +289,7 @@ watch(projectId, () => {
         <div
           v-for="phase in phases"
           :key="phase.id"
-          class="space-y-2 rounded-md border border-zinc-200/95 bg-white/90 p-3 shadow-sm max-sm:-mx-3 max-sm:rounded-none max-sm:border-0 max-sm:shadow-none dark:border-zinc-600/80 dark:bg-zinc-900/45"
+          class="space-y-2 rounded-md border border-zinc-200/95 bg-white/90 p-3 max-sm:-mx-3 max-sm:rounded-none max-sm:border-0 dark:border-zinc-600/80 dark:bg-zinc-900/45"
         >
           <div
             class="flex flex-wrap items-center justify-between gap-2"

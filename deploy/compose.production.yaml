@@ -1,0 +1,44 @@
+# Plaats op de VPS naast .env; start met:
+#   docker compose -f deploy/compose.production.yaml --env-file .env up -d
+#
+# Richt in je reverse proxy (Caddy/Nginx) finbar.diversepersonality.com naar 127.0.0.1:8080
+# (of wijzig de host-poort hieronder).
+
+services:
+  finbar:
+    image: ${FINBAR_IMAGE}
+    container_name: finbar-app
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "127.0.0.1:${FINBAR_PUBLISH_PORT:-8080}:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # Healthcheck: poort 3001 in container
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://127.0.0.1:3001/health',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))\""]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: finbar-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-finbar}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-finbar}
+    volumes:
+      - finbar_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-finbar} -d ${POSTGRES_DB:-finbar}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  finbar_pgdata:

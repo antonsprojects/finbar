@@ -1,5 +1,9 @@
 import type { FastifyPluginAsync } from "fastify";
-import { WorkerAvailabilityStatus, type Worker } from "@prisma/client";
+import {
+  JobStatus,
+  WorkerAvailabilityStatus,
+  type Worker,
+} from "@prisma/client";
 import { z } from "zod";
 import { ok } from "../lib/api-response.js";
 import { HttpError } from "../lib/http-error.js";
@@ -143,8 +147,9 @@ export const workerRoutes: FastifyPluginAsync = async (app) => {
   });
 
   /**
-   * Projecten waar dit teamlid op het projectteam staat;
+   * Projecten waar dit teamlid op het projectteam stond/staat;
    * `assignmentCount` = aantal ingeplande dagen (kan 0 zijn als alleen team, geen dagen).
+   * `job.status` is nodig om actieve vs archief in de UI te scheiden.
    */
   app.get("/:id/schedule-jobs", async (request, reply) => {
     const userId = request.user.sub;
@@ -179,7 +184,7 @@ export const workerRoutes: FastifyPluginAsync = async (app) => {
     const jobIds = [...jobIdSet];
     const jobRows = await prisma.job.findMany({
       where: { userId, id: { in: jobIds } },
-      select: { id: true, name: true },
+      select: { id: true, name: true, status: true },
     });
     const byId = new Map(jobRows.map((j) => [j.id, j]));
     const items = jobIds
@@ -189,20 +194,23 @@ export const workerRoutes: FastifyPluginAsync = async (app) => {
           return null;
         }
         return {
-          job: { id: j.id, name: j.name },
+          job: { id: j.id, name: j.name, status: j.status },
           assignmentCount: countByJob.get(jobId) ?? 0,
         };
       })
       .filter(
-        (x): x is { job: { id: string; name: string }; assignmentCount: number } =>
-          x !== null,
+        (x): x is {
+          job: { id: string; name: string; status: JobStatus };
+          assignmentCount: number;
+        } => x !== null,
       )
       .sort((a, b) => a.job.name.localeCompare(b.job.name, "nl", { sensitivity: "base" }));
     return reply.send(ok({ jobs: items }));
   });
 
   /**
-   * Verwijdert teamlidmaatschap op het project én alle inplanningen daar.
+   * Verwijdert teamlidmaatschap op het project. Alleen als er nog geen
+   * inplanningen op dit project zijn (0 dagen); anders 400.
    */
   app.delete("/:id/schedule-jobs/:jobId", async (request, reply) => {
     const userId = request.user.sub;
@@ -217,15 +225,20 @@ export const workerRoutes: FastifyPluginAsync = async (app) => {
     if (!job) {
       throw new HttpError(404, "NOT_FOUND", "Project niet gevonden");
     }
-    const [schedResult, _team] = await prisma.$transaction([
-      prisma.scheduleAssignment.deleteMany({
-        where: { userId, workerId: id, jobId },
-      }),
-      prisma.jobTeamMember.deleteMany({
-        where: { userId, workerId: id, jobId },
-      }),
-    ]);
-    return reply.send(ok({ deleted: schedResult.count }));
+    const assignmentCount = await prisma.scheduleAssignment.count({
+      where: { userId, workerId: id, jobId },
+    });
+    if (assignmentCount > 0) {
+      throw new HttpError(
+        400,
+        "HAS_SCHEDULE_DAYS",
+        "Verwijder eerst alle ingeplande dagen voor dit project voordat je het teamlid van het project haalt.",
+      );
+    }
+    const teamResult = await prisma.jobTeamMember.deleteMany({
+      where: { userId, workerId: id, jobId },
+    });
+    return reply.send(ok({ deleted: teamResult.count }));
   });
 
   app.post("/", async (request, reply) => {

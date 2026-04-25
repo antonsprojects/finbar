@@ -180,15 +180,12 @@
 
   /** List / table shells */
   .finbar-list-shell {
-    @apply divide-y divide-zinc-200 bg-white
-      max-sm:rounded-none max-sm:border-0
-      rounded-lg border border-zinc-200
-      dark:divide-zinc-800 dark:border-zinc-800 dark:bg-zinc-900/50
-      max-sm:dark:border-0;
+    @apply divide-y divide-zinc-200 rounded-lg border border-zinc-200 bg-white
+      dark:divide-zinc-800 dark:border-zinc-800 dark:bg-zinc-900/50;
   }
 
   .finbar-list-row {
-    @apply flex flex-col gap-0.5 px-3 py-3 hover:bg-zinc-50 sm:flex-row sm:items-center sm:justify-between sm:px-4 dark:hover:bg-zinc-800/80;
+    @apply flex flex-col gap-0.5 px-4 py-3 hover:bg-zinc-50 sm:flex-row sm:items-center sm:justify-between dark:hover:bg-zinc-800/80;
   }
 
   /** Inline navigation (e.g. ← back) */

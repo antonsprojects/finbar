@@ -1,0 +1,9 @@
+# Voorbeeld: Caddy op dezelfde host als Docker.
+# Zet in /etc/caddy/Caddy.d/finbar.caddy of in je bestaande Caddyfile.
+#
+# Zorg dat Finbar luistert op 127.0.0.1:8080 (FINBAR_PUBLISH_PORT=8080 in .env)
+
+finbar.diversepersonality.com {
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:8080
+}

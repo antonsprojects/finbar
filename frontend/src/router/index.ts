@@ -58,9 +58,7 @@ const router = createRouter({
     },
     {
       path: "/archive",
-      name: "project-archive",
-      meta: { requiresAuth: true, hideRootChrome: true },
-      component: () => import("@/views/ProjectArchiveView.vue"),
+      redirect: { name: "home" },
     },
     {
       path: "/projects/new",

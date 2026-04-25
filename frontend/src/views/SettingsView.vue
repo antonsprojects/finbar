@@ -16,7 +16,9 @@ defineOptions({ name: "SettingsView" });
 const auth = useAuthStore();
 const preferences = usePreferencesStore();
 
-const profileName = ref("");
+const profileFirstName = ref("");
+const profileLastName = ref("");
+const profileCompanyName = ref("");
 const profileSaving = ref(false);
 const profileError = ref("");
 const profileSaved = ref(false);
@@ -24,12 +26,14 @@ const profileSaved = ref(false);
 watch(
   () => auth.user,
   (u) => {
-    profileName.value = u?.name ?? "";
+    profileFirstName.value = u?.firstName ?? "";
+    profileLastName.value = u?.lastName ?? "";
+    profileCompanyName.value = u?.companyName ?? "";
   },
   { immediate: true },
 );
 
-watch(profileName, () => {
+watch([profileFirstName, profileLastName, profileCompanyName], () => {
   profileSaved.value = false;
 });
 
@@ -45,7 +49,11 @@ async function saveProfile() {
   profileError.value = "";
   profileSaved.value = false;
   try {
-    await auth.updateProfile({ name: profileName.value });
+    await auth.updateProfile({
+      firstName: profileFirstName.value.trim() || null,
+      lastName: profileLastName.value.trim() || null,
+      companyName: profileCompanyName.value.trim() || null,
+    });
     profileSaved.value = true;
   } catch (err) {
     profileError.value =
@@ -86,9 +94,6 @@ async function onLargeTextToggle(next: boolean) {
       <h2 class="text-base font-medium text-zinc-900 dark:text-white">
         Profiel
       </h2>
-      <p class="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-        Je weergavenaam in het menu. E-mail kun je niet zelf wijzigen.
-      </p>
       <div class="mt-4 space-y-3">
         <div>
           <p class="finbar-field-label">
@@ -99,12 +104,25 @@ async function onLargeTextToggle(next: boolean) {
           </p>
         </div>
         <FinbarInput
-          id="settings-display-name"
-          v-model="profileName"
-          label="Weergavenaam"
-          hint="Optioneel. Leeg laten om je e-mail in het menu te tonen."
+          id="settings-first-name"
+          v-model="profileFirstName"
+          label="Voornaam"
+          maxlength="100"
+          autocomplete="given-name"
+        />
+        <FinbarInput
+          id="settings-last-name"
+          v-model="profileLastName"
+          label="Achternaam"
+          maxlength="100"
+          autocomplete="family-name"
+        />
+        <FinbarInput
+          id="settings-company"
+          v-model="profileCompanyName"
+          label="Bedrijfsnaam"
           maxlength="200"
-          autocomplete="nickname"
+          autocomplete="organization"
         />
         <p
           v-if="profileError"
@@ -120,7 +138,6 @@ async function onLargeTextToggle(next: boolean) {
         </p>
         <FinbarButton
           type="button"
-          variant="secondary"
           :disabled="profileSaving"
           @click="saveProfile"
         >

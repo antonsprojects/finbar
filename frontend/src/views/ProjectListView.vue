@@ -7,7 +7,7 @@ import {
   type JobStatus,
   useJobsStore,
 } from "@/stores/jobs";
-import { computed, onMounted } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { RouterLink } from "vue-router";
 
 defineOptions({ name: "ProjectListView" });
@@ -31,11 +31,20 @@ const completedJobs = computed(() =>
   jobs.list.filter((j) => j.status === "COMPLETED").sort(sortByName),
 );
 
-/** Actief en planning; afgerond en gearchiveerd alleen via Archief. */
 const primaryJobs = computed(() => [
   ...activeJobs.value,
   ...planningJobs.value,
 ]);
+
+/** Sectie alleen tonen als er minstens één project in die status is. */
+const showAfgerondSection = computed(() => completedJobs.value.length > 0);
+const showGearchiveerdSection = computed(() => archivedJobs.value.length > 0);
+
+const completedOpen = ref(false);
+const archivedOpen = ref(false);
+
+const jobCardClass =
+  "flex w-full items-start gap-3 rounded-[var(--finbar-radius-lg)] border border-zinc-300 bg-white px-5 py-4 text-left shadow-sm transition-colors hover:border-zinc-400 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900/70 dark:shadow-none dark:hover:border-zinc-500 dark:hover:bg-zinc-800/80";
 
 function statusBadgeVariant(
   status: JobStatus,
@@ -89,23 +98,28 @@ onMounted(() => {
     >
       <template v-if="primaryJobs.length === 0">
         <p
-          v-if="archivedJobs.length === 0 && completedJobs.length === 0"
+          v-if="!showAfgerondSection && !showGearchiveerdSection"
           class="text-sm text-zinc-600 dark:text-zinc-400"
         >
           Nog geen projecten. Maak er een aan om te beginnen.
         </p>
         <p
+          v-else-if="showAfgerondSection && showGearchiveerdSection"
+          class="text-sm text-zinc-600 dark:text-zinc-400"
+        >
+          Geen actieve of geplande projecten. Afgeronde en gearchiveerde projecten staan in de secties hieronder.
+        </p>
+        <p
+          v-else-if="showAfgerondSection"
+          class="text-sm text-zinc-600 dark:text-zinc-400"
+        >
+          Geen actieve of geplande projecten. Afgeronde projecten staan in de sectie hieronder.
+        </p>
+        <p
           v-else
           class="text-sm text-zinc-600 dark:text-zinc-400"
         >
-          Geen actieve of geplande projecten. Afgeronde en gearchiveerde projecten vind je onder
-          <RouterLink
-            :to="{ name: 'project-archive' }"
-            class="font-medium text-zinc-800 underline underline-offset-2 hover:text-zinc-900 dark:text-zinc-200 dark:hover:text-white"
-          >
-            Archief
-          </RouterLink>
-          .
+          Geen actieve of geplande projecten. Gearchiveerde projecten staan in de sectie hieronder.
         </p>
       </template>
 
@@ -113,7 +127,7 @@ onMounted(() => {
         v-for="j in primaryJobs"
         :key="j.id"
         :to="{ name: 'project-planning-today', params: { projectId: j.id } }"
-        class="flex w-full items-start gap-3 rounded-[var(--finbar-radius-lg)] border border-zinc-300 bg-white px-5 py-4 text-left shadow-sm transition-colors hover:border-zinc-400 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900/70 dark:shadow-none dark:hover:border-zinc-500 dark:hover:bg-zinc-800/80"
+        :class="jobCardClass"
       >
         <div class="min-w-0 flex-1">
           <span class="block text-base font-medium text-zinc-900 dark:text-zinc-100">{{
@@ -133,12 +147,125 @@ onMounted(() => {
         </FinbarBadge>
       </RouterLink>
 
-      <RouterLink
-        :to="{ name: 'project-archive' }"
-        class="mt-4 inline-flex text-sm font-medium text-zinc-600 underline-offset-4 hover:text-zinc-900 hover:underline dark:text-zinc-400 dark:hover:text-zinc-200"
+      <!-- Afgerond (ingeklapt standaard); alleen bij ≥1 afgerond project -->
+      <div
+        v-if="showAfgerondSection"
+        class="mt-2 border-t border-zinc-200 pt-4 dark:border-zinc-800"
       >
-        Archief
-      </RouterLink>
+        <button
+          id="projecten-afgerond-knop"
+          type="button"
+          class="flex w-full cursor-pointer items-center justify-start gap-2 border-0 bg-transparent p-0 text-left text-inherit focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 dark:focus-visible:ring-zinc-500/50"
+          :aria-expanded="completedOpen"
+          aria-controls="projecten-afgerond-lijst"
+          @click="completedOpen = !completedOpen"
+        >
+          <svg
+            class="size-4 shrink-0 text-zinc-500 transition-transform dark:text-zinc-400"
+            :class="completedOpen ? 'rotate-90' : ''"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="m9 18 6-6-6-6" />
+          </svg>
+          <span class="text-sm font-medium text-zinc-800 dark:text-zinc-200">Afgerond</span>
+          <span class="text-xs text-zinc-500 dark:text-zinc-500">({{ completedJobs.length }})</span>
+        </button>
+        <div
+          v-show="completedOpen"
+          id="projecten-afgerond-lijst"
+          class="mt-3 flex flex-col gap-3"
+        >
+          <RouterLink
+            v-for="j in completedJobs"
+            :key="j.id"
+            :to="{ name: 'project-planning-today', params: { projectId: j.id } }"
+            :class="jobCardClass"
+          >
+            <div class="min-w-0 flex-1">
+              <span class="block text-base font-medium text-zinc-900 dark:text-zinc-100">{{
+                j.name
+              }}</span>
+              <span
+                v-if="j.address"
+                class="mt-1.5 block truncate text-xs leading-snug text-zinc-600 dark:text-zinc-400"
+                :title="j.address"
+              >{{ j.address }}</span>
+            </div>
+            <FinbarBadge
+              variant="neutral"
+              class="shrink-0"
+            >
+              {{ JOB_STATUS_LABELS[j.status] }}
+            </FinbarBadge>
+          </RouterLink>
+        </div>
+      </div>
+
+      <!-- Gearchiveerd (ingeklapt standaard); alleen bij ≥1 gearchiveerd project -->
+      <div
+        v-if="showGearchiveerdSection"
+        class="mt-2 border-t border-zinc-200 pt-4 dark:border-zinc-800"
+      >
+        <button
+          id="projecten-archief-knop"
+          type="button"
+          class="flex w-full cursor-pointer items-center justify-start gap-2 border-0 bg-transparent p-0 text-left text-inherit focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 dark:focus-visible:ring-zinc-500/50"
+          :aria-expanded="archivedOpen"
+          aria-controls="projecten-archief-lijst"
+          @click="archivedOpen = !archivedOpen"
+        >
+          <svg
+            class="size-4 shrink-0 text-zinc-500 transition-transform dark:text-zinc-400"
+            :class="archivedOpen ? 'rotate-90' : ''"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="m9 18 6-6-6-6" />
+          </svg>
+          <span class="text-sm font-medium text-zinc-800 dark:text-zinc-200">Gearchiveerd</span>
+          <span class="text-xs text-zinc-500 dark:text-zinc-500">({{ archivedJobs.length }})</span>
+        </button>
+        <div
+          v-show="archivedOpen"
+          id="projecten-archief-lijst"
+          class="mt-3 flex flex-col gap-3"
+        >
+          <RouterLink
+            v-for="j in archivedJobs"
+            :key="j.id"
+            :to="{ name: 'project-planning-today', params: { projectId: j.id } }"
+            :class="jobCardClass"
+          >
+            <div class="min-w-0 flex-1">
+              <span class="block text-base font-medium text-zinc-900 dark:text-zinc-100">{{
+                j.name
+              }}</span>
+              <span
+                v-if="j.address"
+                class="mt-1.5 block truncate text-xs leading-snug text-zinc-600 dark:text-zinc-400"
+                :title="j.address"
+              >{{ j.address }}</span>
+            </div>
+            <FinbarBadge
+              variant="neutral"
+              class="shrink-0"
+            >
+              {{ JOB_STATUS_LABELS[j.status] }}
+            </FinbarBadge>
+          </RouterLink>
+        </div>
+      </div>
     </div>
   </div>
 </template>

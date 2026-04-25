@@ -16,7 +16,10 @@ import { parseBody } from "../lib/validate.js";
 const registerBody = z.object({
   email: z.string().email(),
   password: z.string().min(8),
-  name: z.string().optional(),
+  /** @deprecated Gebruik firstName/lastName; vult firstName als die leeg is. */
+  name: z.string().max(200).optional(),
+  firstName: z.string().max(100).optional(),
+  lastName: z.string().max(100).optional(),
 });
 
 const loginBody = z.object({
@@ -34,7 +37,9 @@ const resetPasswordBody = z.object({
 });
 
 const patchMeBody = z.object({
-  name: z.string().max(200).optional(),
+  firstName: z.string().max(100).nullable().optional(),
+  lastName: z.string().max(100).nullable().optional(),
+  companyName: z.string().max(200).nullable().optional(),
 });
 
 const COOKIE = "finbar_token";
@@ -43,7 +48,8 @@ const COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
 export function createAuthRoutes(env: Env): FastifyPluginAsync {
   return async (app) => {
     app.post("/register", async (request, reply) => {
-      const { email, password, name } = parseBody(registerBody, request.body);
+      const body = parseBody(registerBody, request.body);
+      const { email, password, name, firstName, lastName } = body;
       const normalizedEmail = email.trim().toLowerCase();
       const exists = await prisma.user.findFirst({
         where: { email: { equals: normalizedEmail, mode: "insensitive" } },
@@ -56,11 +62,15 @@ export function createAuthRoutes(env: Env): FastifyPluginAsync {
         );
       }
       const passwordHash = await hashPassword(password);
+      let fn = firstName?.trim() ?? "";
+      if (!fn && name?.trim()) fn = name.trim();
+      const ln = lastName?.trim() ?? "";
       const user = await prisma.user.create({
         data: {
           email: normalizedEmail,
           passwordHash,
-          name: name ?? null,
+          firstName: fn === "" ? null : fn,
+          lastName: ln === "" ? null : ln,
         },
       });
       const token = await reply.jwtSign({ sub: user.id });
@@ -72,7 +82,15 @@ export function createAuthRoutes(env: Env): FastifyPluginAsync {
         maxAge: COOKIE_MAX_AGE,
       });
       return reply.send(
-        ok({ user: { id: user.id, email: user.email, name: user.name } }),
+        ok({
+          user: {
+            id: user.id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            companyName: user.companyName,
+          },
+        }),
       );
     });
 
@@ -98,7 +116,15 @@ export function createAuthRoutes(env: Env): FastifyPluginAsync {
         maxAge: COOKIE_MAX_AGE,
       });
       return reply.send(
-        ok({ user: { id: user.id, email: user.email, name: user.name } }),
+        ok({
+          user: {
+            id: user.id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            companyName: user.companyName,
+          },
+        }),
       );
     });
 
@@ -169,7 +195,14 @@ export function createAuthRoutes(env: Env): FastifyPluginAsync {
         const sub = request.user.sub;
         const user = await prisma.user.findUnique({
           where: { id: sub },
-          select: { id: true, email: true, name: true, preference: true },
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            companyName: true,
+            preference: true,
+          },
         });
         if (!user) {
           throw new HttpError(401, "UNAUTHORIZED", "Gebruiker niet gevonden");
@@ -192,18 +225,45 @@ export function createAuthRoutes(env: Env): FastifyPluginAsync {
       async (request, reply) => {
         const sub = request.user.sub;
         const body = parseBody(patchMeBody, request.body);
-        if (body.name === undefined) {
+        const hasUpdate =
+          body.firstName !== undefined ||
+          body.lastName !== undefined ||
+          body.companyName !== undefined;
+        if (!hasUpdate) {
           throw new HttpError(
             400,
             "VALIDATION_ERROR",
             "Geen velden om bij te werken",
           );
         }
-        const trimmed = body.name.trim();
+        const data: {
+          firstName?: string | null;
+          lastName?: string | null;
+          companyName?: string | null;
+        } = {};
+        if (body.firstName !== undefined) {
+          const t = body.firstName?.trim() ?? "";
+          data.firstName = t === "" ? null : t;
+        }
+        if (body.lastName !== undefined) {
+          const t = body.lastName?.trim() ?? "";
+          data.lastName = t === "" ? null : t;
+        }
+        if (body.companyName !== undefined) {
+          const t = body.companyName?.trim() ?? "";
+          data.companyName = t === "" ? null : t;
+        }
         const user = await prisma.user.update({
           where: { id: sub },
-          data: { name: trimmed === "" ? null : trimmed },
-          select: { id: true, email: true, name: true, preference: true },
+          data,
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            companyName: true,
+            preference: true,
+          },
         });
         const { preference, ...rest } = user;
         return reply.send(

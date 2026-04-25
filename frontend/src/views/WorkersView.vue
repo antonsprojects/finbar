@@ -181,17 +181,25 @@ async function onWorkerEditUpdated() {
 
     <article
       v-if="!pageLoading"
-      class="finbar-page-article-shell !bg-zinc-50 dark:!bg-zinc-950"
+      class="finbar-page-article-shell"
     >
       <header
         class="border-b border-zinc-200/90 pb-2 dark:border-zinc-700/80"
       >
         <div
-          class="flex w-full items-center justify-center md:justify-end"
+          class="flex min-w-0 items-center justify-between gap-3"
         >
+          <div class="min-w-0 px-0.5">
+            <h1
+              class="text-base font-semibold text-zinc-900 dark:text-white"
+            >
+              Team
+            </h1>
+          </div>
           <TodayAddToolbarButton
             pill
             label="Teamlid uit netwerk toevoegen"
+            class="shrink-0"
             @click="teamAddOpen = true"
           />
         </div>

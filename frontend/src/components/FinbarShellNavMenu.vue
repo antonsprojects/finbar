@@ -172,14 +172,6 @@ onUnmounted(() => {
       >
         Netwerk
       </RouterLink>
-      <RouterLink
-        :to="{ name: 'project-archive' }"
-        role="menuitem"
-        class="block px-3 py-2 text-left text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
-        @click="closeProjectMenu"
-      >
-        Archive
-      </RouterLink>
 
       <div
         class="my-1 border-b border-zinc-200 dark:border-zinc-700"

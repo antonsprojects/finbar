@@ -311,7 +311,7 @@ async function toggleTaskDone(taskId: string, completed: boolean) {
       class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950 shadow-sm dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-100"
     >
       <p class="font-semibold text-zinc-900 dark:text-amber-50">
-        Planning en beschikbaarheid (deze dag)
+        Rooster en beschikbaarheid (deze dag)
       </p>
       <ul
         class="mt-1.5 list-inside list-disc space-y-1 text-zinc-800 dark:text-zinc-200"

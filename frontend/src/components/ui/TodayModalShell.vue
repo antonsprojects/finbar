@@ -83,7 +83,7 @@ const closeButtonClass = computed(() => {
       base,
       "right-2 sm:right-3",
       "max-sm:top-[calc(max(0.25rem,env(safe-area-inset-top,0px))+0.25rem-2px)]",
-      "sm:top-[calc(max(0.25rem,env(safe-area-inset-top,0px))+0.375rem)]",
+      "sm:top-[calc(max(0.25rem,env(safe-area-inset-top,0px))+0.375rem+4px)]",
     ].join(" ");
   }
   return [base, "right-2 top-2.5 sm:right-3 sm:top-3"].join(" ");

@@ -173,11 +173,11 @@ watch(activeMain, (t) => {
   >
     <!-- Vaste bovenbalk: lijn sluitkruisje (z-20, TodayModalShell) = titel, niet de tabs. -->
     <header
-      class="relative z-10 shrink-0 border-b border-zinc-200 bg-zinc-50 pt-[max(0.25rem,env(safe-area-inset-top,0px))] dark:border-zinc-800/80 dark:bg-zinc-950"
+      class="relative z-10 shrink-0 border-b border-zinc-200 bg-zinc-50 max-sm:pt-[max(0.25rem,env(safe-area-inset-top,0px))] sm:pt-0 dark:border-zinc-800/80 dark:bg-zinc-950"
     >
       <div
         v-if="!worker"
-        class="flex min-h-11 w-full min-w-0 items-center px-4 pr-12 sm:min-h-12 sm:pl-6 sm:pr-16"
+        class="flex min-h-11 w-full min-w-0 items-center px-4 pr-12 sm:min-h-12 sm:py-2.5 sm:pl-6 sm:pr-16"
       >
         <h1
           class="m-0 flex min-h-11 min-w-0 flex-1 items-center self-stretch py-0 text-base font-semibold leading-6 tracking-tight text-zinc-900 sm:min-h-12 sm:leading-6 dark:text-zinc-100"
@@ -188,7 +188,7 @@ watch(activeMain, (t) => {
 
       <div
         v-else
-        class="grid w-full grid-cols-1 sm:min-h-12 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-center sm:gap-x-2 sm:px-6 sm:py-1.5 sm:pr-16"
+        class="grid w-full grid-cols-1 sm:min-h-12 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-center sm:gap-x-2 sm:px-6 sm:py-2.5 sm:pr-16"
       >
         <h1
           class="m-0 row-start-1 flex min-h-11 min-w-0 items-center self-stretch px-4 pr-12 py-0 text-base font-semibold leading-6 tracking-tight text-zinc-900 sm:col-start-1 sm:row-start-1 sm:min-h-12 sm:max-w-sm sm:shrink-0 sm:px-0 sm:pr-2 sm:leading-6 dark:text-zinc-100"
@@ -329,68 +329,70 @@ watch(activeMain, (t) => {
         <div
           v-show="activeMain === 'gegevens'"
           id="wdb-panel-gegevens"
-          class="space-y-3 px-4 py-2.5 sm:px-6 sm:py-3"
+          class="space-y-3 px-4 max-sm:pt-0 max-sm:pb-2.5 sm:px-6 sm:py-3"
           role="tabpanel"
           aria-labelledby="wdb-tab-btn-gegevens"
           tabindex="0"
         >
-        <form
-          class="space-y-3"
-          @submit.prevent="save"
+        <div
+          class="space-y-3 border border-zinc-200/90 bg-white/95 p-3 dark:border-zinc-600/80 dark:bg-zinc-900/45 max-sm:-mx-4 max-sm:rounded-none max-sm:border-t-0 sm:rounded-lg"
         >
-          <div class="grid gap-3 sm:grid-cols-2">
-            <div>
-              <label
-                class="finbar-field-label"
-                for="wdb-first"
-              >Voornaam</label>
-              <input
-                id="wdb-first"
-                v-model="firstName"
-                type="text"
-                required
-                maxlength="200"
-                class="finbar-field-input"
-                autocomplete="given-name"
-              >
-            </div>
-            <div>
-              <label
-                class="finbar-field-label"
-                for="wdb-last"
-              >Achternaam</label>
-              <input
-                id="wdb-last"
-                v-model="lastName"
-                type="text"
-                maxlength="200"
-                class="finbar-field-input"
-                autocomplete="family-name"
-              >
-            </div>
-          </div>
-          <WorkerTradeInput
-            v-model="trade"
-            input-id="wdb-trade"
-            :suggestions="tradeSuggestions"
-          />
-          <WorkerGegevensProjecten :worker-id="worker.id" />
-
-          <p
-            v-if="error"
-            class="text-sm text-red-400"
+          <form
+            class="space-y-3"
+            @submit.prevent="save"
           >
-            {{ error }}
-          </p>
-
-          <button
-            type="submit"
-            :disabled="saving"
-            class="finbar-btn-primary"
-          >
-            {{ saving ? "Opslaan…" : "Opslaan" }}
-          </button>
-        </form>
+            <div class="grid gap-3 sm:grid-cols-2">
+              <div>
+                <label
+                  class="finbar-field-label"
+                  for="wdb-first"
+                >Voornaam</label>
+                <input
+                  id="wdb-first"
+                  v-model="firstName"
+                  type="text"
+                  required
+                  maxlength="200"
+                  class="finbar-field-input"
+                  autocomplete="given-name"
+                >
+              </div>
+              <div>
+                <label
+                  class="finbar-field-label"
+                  for="wdb-last"
+                >Achternaam</label>
+                <input
+                  id="wdb-last"
+                  v-model="lastName"
+                  type="text"
+                  maxlength="200"
+                  class="finbar-field-input"
+                  autocomplete="family-name"
+                >
+              </div>
+            </div>
+            <WorkerTradeInput
+              v-model="trade"
+              input-id="wdb-trade"
+              :suggestions="tradeSuggestions"
+            />
+            <p
+              v-if="error"
+              class="text-sm text-red-400"
+            >
+              {{ error }}
+            </p>
+            <button
+              type="submit"
+              :disabled="saving"
+              class="finbar-btn-primary"
+            >
+              {{ saving ? "Opslaan…" : "Opslaan" }}
+            </button>
+          </form>
+        </div>
+        <WorkerGegevensProjecten :worker-id="worker.id" />
         </div>
 
         <div

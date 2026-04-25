@@ -1,3 +1,5 @@
+import type { JobStatus } from "@/stores/jobs";
+
 type ApiErrorJson = { error?: { message?: string } };
 
 function readApiErrorMessage(json: unknown): string | undefined {
@@ -10,7 +12,7 @@ function readApiErrorMessage(json: unknown): string | undefined {
 }
 
 export type WorkerScheduleJobRow = {
-  job: { id: string; name: string };
+  job: { id: string; name: string; status: JobStatus };
   assignmentCount: number;
 };
 
@@ -31,7 +33,7 @@ export async function fetchWorkerScheduleJobs(
   return payload.data?.jobs ?? [];
 }
 
-/** Verwijdert alle inplanningen op dit project voor het teamlid. */
+/** Verwijdert teamlid van het project; alleen als er nog geen ingeplande dagen zijn. */
 export async function removeWorkerFromScheduleJob(
   workerId: string,
   jobId: string,

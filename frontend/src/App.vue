@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import FinbarShellNavMenu from "@/components/FinbarShellNavMenu.vue";
 import { FinbarAccountMenu, FinbarThemeToggle } from "@/components/ui";
+import { appBrandName } from "@/lib/accountDisplay";
 import { useAuthStore } from "@/stores/auth";
 import { usePreferencesStore } from "@/stores/preferences";
 import { computed, watch } from "vue";
@@ -18,15 +19,23 @@ const hideRootChrome = computed(
   () => route.meta.hideRootChrome === true,
 );
 
+/** Merk in de globale header: bedrijfsnaam of anders Finbar. */
+const globalBrandTitle = computed(() =>
+  auth.user ? appBrandName(auth.user) : "Finbar",
+);
+
+watch(
+  globalBrandTitle,
+  (t) => {
+    document.title = t;
+  },
+  { immediate: true },
+);
+
 const routeName = computed(() => String(route.name ?? ""));
 
 const projectsNavActive = computed(() =>
-  [
-    "home",
-    "project-archive",
-    "project-new",
-    "global-settings",
-  ].includes(routeName.value),
+  ["home", "project-new"].includes(routeName.value),
 );
 
 const workersNavActive = computed(() =>
@@ -50,9 +59,23 @@ const navPillActive =
 const navPillIdle =
   "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200";
 
-/** Home (Projecten-lijst) houdt horizontale main-padding; overige globale routes: smal = tot-aan-rand. */
+/**
+ * Onder hideRootChrome: op kleine schermen standaard horizontale + bovenmarge, zodat headers
+ * en FinbarCard-rondingen zichtbaar blijven. Alleen uitzonderingen (bijv. volbreed-stroom)
+ * krijgen `px-0 pt-0` op mobiel.
+ */
+const routesWithPaddedGlobalMainMobile = new Set<string>([
+  "home",
+  "global-settings",
+  "global-workers",
+  "global-worker-new",
+  "global-worker-detail",
+]);
+
 const fullBleedMainMobile = computed(
-  () => hideRootChrome.value && routeName.value !== "home",
+  () =>
+    hideRootChrome.value &&
+    !routesWithPaddedGlobalMainMobile.has(routeName.value),
 );
 </script>
 
@@ -79,7 +102,7 @@ const fullBleedMainMobile = computed(
             to="/"
             class="font-semibold tracking-tight text-zinc-900 dark:text-white"
           >
-            Finbar
+            {{ globalBrandTitle }}
           </RouterLink>
         </div>
 
@@ -118,10 +141,10 @@ const fullBleedMainMobile = computed(
     </header>
     <main
       :class="[
-        'finbar-main mx-auto w-full max-w-5xl flex-1',
+        'finbar-main mx-auto w-full max-w-5xl flex-auto',
         fullBleedMainMobile
-          ? 'px-0 pt-0 pb-6 sm:px-4 sm:py-6'
-          : 'px-4 py-6',
+          ? 'px-0 pt-0 pb-[max(1.5rem,env(safe-area-inset-bottom,0))] sm:px-4 sm:py-6'
+          : 'px-4 py-6 pb-[max(1.5rem,env(safe-area-inset-bottom,0))]',
       ]"
     >
       <RouterView />
@@ -143,7 +166,7 @@ const fullBleedMainMobile = computed(
           to="/login"
           class="mr-2 font-semibold tracking-tight text-zinc-900 dark:text-white"
         >
-          Finbar
+          {{ globalBrandTitle }}
         </RouterLink>
         <div class="ml-auto flex flex-wrap items-center gap-2 sm:gap-3">
           <FinbarThemeToggle />
@@ -164,7 +187,9 @@ const fullBleedMainMobile = computed(
         </div>
       </div>
     </header>
-    <main class="finbar-main mx-auto w-full max-w-5xl flex-1 px-4 py-6">
+    <main
+      class="finbar-main mx-auto w-full max-w-5xl flex-auto px-4 py-6 pb-[max(1.5rem,env(safe-area-inset-bottom,0))]"
+    >
       <RouterView />
     </main>
   </div>
@@ -174,7 +199,9 @@ const fullBleedMainMobile = computed(
     v-else
     class="flex min-h-svh flex-col bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100"
   >
-    <main class="finbar-main mx-auto w-full max-w-5xl flex-1 px-4 py-6">
+    <main
+      class="finbar-main mx-auto w-full max-w-5xl flex-auto px-4 py-6 pb-[max(1.5rem,env(safe-area-inset-bottom,0))]"
+    >
       <RouterView />
     </main>
   </div>

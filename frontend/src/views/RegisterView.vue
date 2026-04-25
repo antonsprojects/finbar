@@ -8,7 +8,8 @@ defineOptions({ name: "RegisterView" });
 
 const email = ref("");
 const password = ref("");
-const name = ref("");
+const firstName = ref("");
+const lastName = ref("");
 const error = ref("");
 const loading = ref(false);
 const router = useRouter();
@@ -18,7 +19,10 @@ async function onSubmit() {
   error.value = "";
   loading.value = true;
   try {
-    await auth.register(email.value, password.value, name.value || undefined);
+    await auth.register(email.value, password.value, {
+      firstName: firstName.value.trim() || undefined,
+      lastName: lastName.value.trim() || undefined,
+    });
     await router.push("/");
   } catch (e) {
     error.value = e instanceof Error ? e.message : "Registratie mislukt";
@@ -40,11 +44,18 @@ async function onSubmit() {
       @submit.prevent="onSubmit"
     >
       <FinbarInput
-        id="name"
-        v-model="name"
-        label="Naam (optioneel)"
+        id="reg-first-name"
+        v-model="firstName"
+        label="Voornaam (optioneel)"
         type="text"
-        autocomplete="name"
+        autocomplete="given-name"
+      />
+      <FinbarInput
+        id="reg-last-name"
+        v-model="lastName"
+        label="Achternaam (optioneel)"
+        type="text"
+        autocomplete="family-name"
       />
       <FinbarInput
         id="email"

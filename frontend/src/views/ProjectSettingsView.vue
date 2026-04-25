@@ -4,9 +4,14 @@ import {
   FinbarCard,
   FinbarInput,
   FinbarPageHeader,
+  FinbarSelect,
   FinbarTextarea,
 } from "@/components/ui";
-import { useJobsStore } from "@/stores/jobs";
+import {
+  JOB_STATUS_LABELS,
+  useJobsStore,
+  type JobStatus,
+} from "@/stores/jobs";
 import { computed, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 
@@ -21,6 +26,7 @@ const job = computed(() => jobs.detailById[projectId.value] ?? null);
 
 const nameDraft = ref("");
 const addressDraft = ref("");
+const statusDraft = ref<JobStatus>("PLANNING");
 const saving = ref(false);
 const error = ref("");
 const saved = ref(false);
@@ -45,11 +51,12 @@ watch(
     if (!j) return;
     nameDraft.value = j.name;
     addressDraft.value = j.address ?? "";
+    statusDraft.value = j.status;
   },
   { immediate: true },
 );
 
-watch([nameDraft, addressDraft], () => {
+watch([nameDraft, addressDraft, statusDraft], () => {
   saved.value = false;
 });
 
@@ -73,6 +80,7 @@ async function save() {
     await jobs.updateJob(id, {
       name: nextName,
       address: nextAddress === "" ? null : nextAddress,
+      status: statusDraft.value,
     });
     saved.value = true;
   } catch (e) {
@@ -88,7 +96,7 @@ async function save() {
   <div class="mx-auto max-w-lg">
     <FinbarPageHeader title="Projectinstellingen">
       <template #description>
-        Wijzig de naam en het adres van dit project.
+        Wijzig naam, adres en status van dit project.
       </template>
     </FinbarPageHeader>
 
@@ -113,6 +121,20 @@ async function save() {
           placeholder="Straat, postcode, plaats"
           autocomplete="street-address"
         />
+        <FinbarSelect
+          id="project-settings-status"
+          v-model="statusDraft"
+          label="Status"
+          hint="Bepaalt hoe dit project in lijsten en overzichten wordt getoond."
+        >
+          <option
+            v-for="(label, key) in JOB_STATUS_LABELS"
+            :key="key"
+            :value="key"
+          >
+            {{ label }}
+          </option>
+        </FinbarSelect>
       </div>
       <p
         v-if="error"

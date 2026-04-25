@@ -9,7 +9,9 @@ export type UserPreference = {
 export type AuthUser = {
   id: string;
   email: string;
-  name: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  companyName: string | null;
   preference?: UserPreference;
 };
 
@@ -66,12 +68,22 @@ export const useAuthStore = defineStore("auth", () => {
     await fetchMe();
   }
 
-  async function register(email: string, password: string, name?: string) {
+  async function register(
+    email: string,
+    password: string,
+    opts?: { firstName?: string; lastName?: string; name?: string },
+  ) {
     const r = await fetch("/api/auth/register", {
       method: "POST",
       credentials: "include",
       headers: jsonHeaders,
-      body: JSON.stringify({ email, password, name }),
+      body: JSON.stringify({
+        email,
+        password,
+        firstName: opts?.firstName,
+        lastName: opts?.lastName,
+        name: opts?.name,
+      }),
     });
     const data = await r.json().catch(() => ({}));
     if (!r.ok) {
@@ -85,7 +97,11 @@ export const useAuthStore = defineStore("auth", () => {
     user.value = null;
   }
 
-  async function updateProfile(patch: { name: string }) {
+  async function updateProfile(patch: {
+    firstName?: string | null;
+    lastName?: string | null;
+    companyName?: string | null;
+  }) {
     const r = await fetch("/api/auth/me", {
       method: "PATCH",
       credentials: "include",

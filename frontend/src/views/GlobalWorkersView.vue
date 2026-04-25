@@ -104,7 +104,7 @@ async function onWorkerCreated(w: Worker) {
 
     <article
       v-else
-      class="finbar-page-article-shell !bg-zinc-50 dark:!bg-zinc-950"
+      class="finbar-page-article-shell"
     >
       <header
         class="border-b border-zinc-200/90 pb-2 dark:border-zinc-700/80"

@@ -36,12 +36,15 @@ enum WorkerAvailabilityPeriodKind {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  passwordHash String   @map("password_hash")
-  name         String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id            String   @id @default(cuid())
+  email         String   @unique
+  passwordHash  String   @map("password_hash")
+  firstName     String?  @map("first_name")
+  lastName      String?  @map("last_name")
+  /// Getoond als app-naam in de globale header; leeg = standaard “Finbar”.
+  companyName   String?  @map("company_name")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   jobs                 Job[]
   workers              Worker[]

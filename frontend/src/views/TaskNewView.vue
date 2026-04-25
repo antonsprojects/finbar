@@ -84,7 +84,7 @@ async function onSubmit() {
         :to="{ name: 'project-planning-today', params: { projectId: jobId } }"
         class="finbar-link-back"
       >
-        ← Planning
+        ← Rooster
       </RouterLink>
     </div>
     <h1 class="text-xl font-semibold text-zinc-900 dark:text-white">Nieuwe taak</h1>

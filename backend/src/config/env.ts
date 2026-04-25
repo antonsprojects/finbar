@@ -10,6 +10,10 @@ const schema = z.object({
   /** Signing JWTs for cookie sessions (min 32 chars in production). */
   JWT_SECRET: z.string().min(16),
   /**
+   * Absoluut pad naar Vite `dist` (frontend build). Gezet in Docker; weggelaten = alleen API.
+   */
+  STATIC_DIR: z.string().optional(),
+  /**
    * Origin of the web app (no trailing slash). Used in password-reset e-mails.
    * Example: https://app.example.com
    */
@@ -18,7 +22,16 @@ const schema = z.object({
   RESEND_API_KEY: z.string().min(1).optional(),
   /** From header for Resend (e.g. Finbar <onboarding@resend.dev> for testing). */
   RESEND_FROM: z.string().min(1).optional(),
-});
+})
+  .superRefine((data, ctx) => {
+    if (data.NODE_ENV === "production" && data.JWT_SECRET.length < 32) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "JWT_SECRET moet minimaal 32 tekens zijn in productie",
+        path: ["JWT_SECRET"],
+      });
+    }
+  });
 
 export type Env = z.infer<typeof schema>;
 

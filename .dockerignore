@@ -1,0 +1,14 @@
+.git
+.github
+**/.env
+**/.env.*
+!**/.env.example
+**/node_modules
+**/dist
+frontend/dist
+backend/dist
+*.md
+!backend/prisma
+Documentation
+.vscode
+.cursor

@@ -248,7 +248,7 @@ function cellShort(status: WorkerAvailabilityStatus | undefined): string {
         "
         @click="weekTab = 'planner'"
       >
-        Planning op projecten
+        Rooster per project
       </button>
     </div>
 

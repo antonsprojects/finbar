@@ -38,7 +38,7 @@ const nav = computed(() => {
       activeNames: ["project-begroting"],
     },
     {
-      label: "Planning",
+      label: "Rooster",
       to: { name: "project-planning-today", params: { projectId: pid } },
       activeNames: [
         "project-planning-today",
@@ -125,7 +125,7 @@ function isProjectNavActive(item: { activeNames: readonly string[] }) {
     </header>
 
     <main
-      class="finbar-main mx-auto w-full max-w-5xl flex-1 px-0 pt-0 pb-6 sm:px-4 sm:py-6"
+      class="finbar-main mx-auto w-full max-w-5xl flex-auto px-0 pt-0 pb-6 sm:px-4 sm:py-6 max-sm:pb-[max(1.5rem,env(safe-area-inset-bottom,0))]"
     >
       <RouterView />
     </main>

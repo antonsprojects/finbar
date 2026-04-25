@@ -2,6 +2,9 @@ import cookie from "@fastify/cookie";
 import cors from "@fastify/cors";
 import jwt from "@fastify/jwt";
 import sensible from "@fastify/sensible";
+import fastifyStatic from "@fastify/static";
+import fs from "node:fs";
+import path from "node:path";
 import Fastify, { type FastifyError, type FastifyReply } from "fastify";
 import type { Env } from "./config/env.js";
 import { ok, type ApiErrorBody } from "./lib/api-response.js";
@@ -23,7 +26,18 @@ function sendJson(reply: FastifyReply, statusCode: number, body: unknown) {
     .send(JSON.stringify(body));
 }
 
+function publicWebOrigin(env: Env): string | null {
+  try {
+    return new URL(env.PUBLIC_APP_URL).origin;
+  } catch {
+    return null;
+  }
+}
+
 export async function buildApp(env: Env) {
+  const useStatic = Boolean(env.STATIC_DIR?.trim());
+  const publicOrigin = publicWebOrigin(env);
+
   const app = Fastify({
     logger: {
       level: process.env.NODE_ENV === "production" ? "info" : "debug",
@@ -40,13 +54,21 @@ export async function buildApp(env: Env) {
         cb(null, true);
         return;
       }
-      const allowed = new Set([
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "http://localhost:3001",
-        "http://127.0.0.1:3001",
-      ]);
-      cb(null, allowed.has(origin));
+      if (publicOrigin && origin === publicOrigin) {
+        cb(null, true);
+        return;
+      }
+      if (env.NODE_ENV !== "production") {
+        const dev = new Set([
+          "http://localhost:5173",
+          "http://127.0.0.1:5173",
+          "http://localhost:3001",
+          "http://127.0.0.1:3001",
+        ]);
+        cb(null, dev.has(origin));
+        return;
+      }
+      cb(null, false);
     },
     credentials: true,
   });
@@ -97,11 +119,13 @@ export async function buildApp(env: Env) {
     sendJson(reply, statusCode, body);
   });
 
-  app.get("/", async () => ({
-    service: "finbar-api",
-    health: "/health",
-    api: "/api",
-  }));
+  if (!useStatic) {
+    app.get("/", async () => ({
+      service: "finbar-api",
+      health: "/health",
+      api: "/api",
+    }));
+  }
 
   app.get("/health", async () => ({
     status: "ok",
@@ -142,6 +166,31 @@ export async function buildApp(env: Env) {
   });
   await app.register(todayRoutes, { prefix: "/api/today" });
   await app.register(preferenceRoutes, { prefix: "/api/preferences" });
+
+  if (useStatic && env.STATIC_DIR) {
+    const staticRoot = path.resolve(env.STATIC_DIR);
+    if (!fs.existsSync(path.join(staticRoot, "index.html"))) {
+      app.log.warn({ staticRoot }, "STATIC_DIR bevat geen index.html; SPA uitgeschakeld");
+    } else {
+      await app.register(fastifyStatic, {
+        root: staticRoot,
+        index: "index.html",
+        decorateReply: true,
+      });
+      app.setNotFoundHandler((request, reply) => {
+        const p = request.url.split("?")[0] ?? "";
+        if (p.startsWith("/api")) {
+          return sendJson(reply, 404, {
+            error: { code: "NOT_FOUND", message: "Niet gevonden" },
+          });
+        }
+        if (request.method !== "GET" && request.method !== "HEAD") {
+          return reply.code(405).send();
+        }
+        return reply.sendFile("index.html");
+      });
+    }
+  }
 
   return app;
 }

@@ -126,7 +126,7 @@ async function markDone() {
         }"
         class="finbar-link-back"
       >
-        ← Planning
+        ← Rooster
       </RouterLink>
     </div>
 

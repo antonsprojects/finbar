@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import FinbarButton from "./FinbarButton.vue";
+import { accountDisplayName } from "@/lib/accountDisplay";
 import { useAuthStore } from "@/stores/auth";
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import type { RouteLocationRaw } from "vue-router";
@@ -19,12 +20,7 @@ const router = useRouter();
 const open = ref(false);
 const rootEl = ref<HTMLElement | null>(null);
 
-const accountLabel = computed(() => {
-  const u = auth.user;
-  if (!u) return "";
-  const n = u.name?.trim();
-  return n && n.length > 0 ? n : u.email;
-});
+const accountLabel = computed(() => accountDisplayName(auth.user));
 
 /** Eén zichtbaar teken voor compacte mobile-avatar (o.a. emoji → eerste teken) */
 const accountInitial = computed(() => {
@@ -115,10 +111,10 @@ async function onLogout() {
       aria-label="Accountmenu"
     >
       <p
-        v-if="auth.user?.name?.trim()"
+        v-if="auth.user && accountLabel !== auth.user.email"
         class="mb-0.5 truncate text-sm font-medium text-zinc-900 dark:text-zinc-100"
       >
-        {{ auth.user.name }}
+        {{ accountLabel }}
       </p>
       <p class="mb-3 truncate text-xs text-zinc-500 dark:text-zinc-400">
         {{ auth.user?.email }}

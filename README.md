@@ -34,6 +34,10 @@ Short version (see [docs/local-development.md](docs/local-development.md) for pa
 
 Do not put `npm run dev` at repo root (no script there). When copying `cp` commands, do not add words after `.env` on the same line unless the line starts with `#`.
 
+## Productie (VPS, Docker, GitHub Actions)
+
+Een stappenplan voor o.a. een subdomein op je eigen server met **Docker**, **ghcr.io**, en **SSH-deploy** staat in **[docs/deploy-vps.md](docs/deploy-vps.md)**. Bestanden: `Dockerfile`, `deploy/compose.production.yaml`, `deploy/Caddyfile.example`, `.github/workflows/deploy.yml`.
+
 ## Branch strategy
 
 - **`main`** — stable, deployable history (protect in GitHub/GitLab if you use PRs).
