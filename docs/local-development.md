@@ -97,7 +97,7 @@ Default Compose credentials: user `finbar`, password `finbar`, database `finbar`
    cp backend/.env.example backend/.env
    ```
 
-   Edit `backend/.env` and set **`DATABASE_URL`** to match **option A** (your new role/database) or **option B** (Docker URL and port).
+   Edit `backend/.env` and set **`DATABASE_URL`** to match **option A** (your new role/database) or **option B** (Docker URL and port). Set **`JWT_SECRET`** to a long random string (required for auth cookies — see `backend/.env.example`).
 
    Put **`#` comments on their own line** in the shell. If you run `cp .env.example .env first time only` (without `#`), the shell passes extra words to `cp` and you get errors like `cp: only: Not a directory`.
 
@@ -129,7 +129,7 @@ Default Compose credentials: user `finbar`, password `finbar`, database `finbar`
 
 Then open:
 
-- App: [http://localhost:5173](http://localhost:5173)
+- App: [http://localhost:5173](http://localhost:5173) (if the browser says **connection refused**, try [http://127.0.0.1:5173](http://127.0.0.1:5173) — see **Troubleshooting**)
 - API health: [http://localhost:3001/health](http://localhost:3001/health)
 
 ## Root npm scripts
@@ -154,6 +154,7 @@ If the API runs inside Compose, use hostname `postgres` in `DATABASE_URL` instea
 
 ## Troubleshooting
 
+- **`ERR_CONNECTION_REFUSED` for the Vite app (`localhost:5173`):** Ensure **`npm run dev:web`** is running (repo root or `frontend/`). Confirm something is listening: `lsof -nP -iTCP:5173 -sTCP:LISTEN`. If Vite bound only to IPv6 (`[::1]`) and your browser uses IPv4 for `localhost`, use **`http://127.0.0.1:5173`** or **`http://[::1]:5173`**. The repo’s `frontend/vite.config.ts` sets `server.host: true` so the dev server listens on all interfaces and avoids that mismatch — restart Vite after pulling changes.
 - **Another app uses the API port (e.g. Pasty on 3000):** Finbar defaults to **`PORT=3001`** in `backend/.env`. Set `VITE_API_BASE_URL=http://127.0.0.1:3001` in `frontend/.env`. If you still have `PORT=3000` from an older copy, change it to `3001` or any free port.
 - **`Missing script: "db:up"`** while in `backend/` or `frontend/`: run `npm run db:up` from the **repository root** only (that is where the script is defined). If you use **option A**, you do not need this script.
 - **`Missing script: "dev"`** at repo root: use `npm run dev:api`, `npm run dev:web`, or `cd backend` / `cd frontend` then `npm run dev`.

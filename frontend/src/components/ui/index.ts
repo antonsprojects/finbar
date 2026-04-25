@@ -1,0 +1,13 @@
+/** Finbar UI primitives — see docs/design-system-v1.md */
+export { default as FinbarAccountMenu } from "./FinbarAccountMenu.vue";
+export { default as FinbarBadge } from "./FinbarBadge.vue";
+export { default as FinbarButton } from "./FinbarButton.vue";
+export { default as FinbarCard } from "./FinbarCard.vue";
+export { default as FinbarDialog } from "./FinbarDialog.vue";
+export { default as FinbarInput } from "./FinbarInput.vue";
+export { default as FinbarPageHeader } from "./FinbarPageHeader.vue";
+export { default as FinbarSelect } from "./FinbarSelect.vue";
+export { default as FinbarSheet } from "./FinbarSheet.vue";
+export { default as FinbarTextarea } from "./FinbarTextarea.vue";
+export { default as FinbarThemeToggle } from "./FinbarThemeToggle.vue";
+export { default as FinbarToggle } from "./FinbarToggle.vue";

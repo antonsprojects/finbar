@@ -1,16 +1,198 @@
+@import "./styles/tokens.css";
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @layer base {
+  html {
+    color-scheme: light;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
   body {
-    @apply m-0 min-h-svh antialiased;
+    @apply m-0 min-h-svh bg-zinc-50 text-zinc-900 antialiased dark:bg-zinc-950 dark:text-zinc-100;
   }
 }
 
 @layer components {
   .finbar-nav-link {
-    @apply rounded-md px-3 py-1.5 text-sm text-zinc-300 transition-colors hover:bg-zinc-800;
+    @apply rounded-sm px-2 py-1.5 text-sm text-zinc-600 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100;
   }
+
   .finbar-nav-link.router-link-active {
-    @apply bg-zinc-800 text-white;
+    @apply font-medium text-zinc-900 underline decoration-zinc-400 underline-offset-4 dark:text-zinc-100 dark:decoration-zinc-500;
+  }
+
+  /**
+   * Large-text / high-legibility mode (class on `<html>`, toggled from Settings).
+   */
+  html.finbar-large-text {
+    font-size: 112.5%;
+  }
+
+  html.finbar-large-text body {
+    line-height: 1.6;
+  }
+
+  html.finbar-large-text .finbar-nav-link {
+    @apply px-3.5 py-2 text-base;
+  }
+
+  html.finbar-large-text .finbar-header {
+    @apply py-4;
+  }
+
+  html.finbar-large-text .finbar-header > div {
+    @apply gap-3 px-5;
+  }
+
+  html.finbar-large-text .finbar-main {
+    @apply max-w-6xl px-5 py-8;
+  }
+
+  html.finbar-large-text button:not(:disabled),
+  html.finbar-large-text [type="submit"]:not(:disabled) {
+    @apply min-h-[44px] px-4 py-2.5;
+  }
+
+  html.finbar-large-text input:not([type="checkbox"]):not([type="radio"]),
+  html.finbar-large-text select,
+  html.finbar-large-text textarea {
+    @apply min-h-[44px];
+  }
+
+  /** Voorkom dat large-text `py-2.5` op knoppen pill-hoogte opblaast */
+  html.finbar-large-text .finbar-pill-height {
+    min-height: var(--finbar-height-pill) !important;
+    height: var(--finbar-height-pill) !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+
+  /**
+   * Ronde icon-only knoppen (bijv. dag vorig/volgende): niet opblazen met min-h-44/px-4
+   * van `html.finbar-large-text button` — anders ovaal en onzichtbaar icoontje.
+   */
+  html.finbar-large-text button.finbar-icon-circle-btn:enabled {
+    min-height: 2.25rem !important;
+    max-height: 2.25rem !important;
+    height: 2.25rem !important;
+    min-width: 2.25rem !important;
+    max-width: 2.25rem !important;
+    width: 2.25rem !important;
+    padding: 0 !important;
+  }
+
+  /** Pill-zoekveld: vaste hoogte i.p.v. min-h uit input-regel */
+  html.finbar-large-text input.finbar-pill-height[type="search"] {
+    min-height: var(--finbar-height-pill) !important;
+    height: var(--finbar-height-pill) !important;
+  }
+
+  html.finbar-large-text textarea {
+    min-height: 6rem;
+  }
+
+  .finbar-btn-primary {
+    @apply inline-flex items-center justify-center rounded-[var(--finbar-radius)] border border-zinc-800 bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:pointer-events-none disabled:opacity-50 dark:border-zinc-600 dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-white dark:focus-visible:ring-offset-zinc-950;
+  }
+
+  .finbar-link {
+    @apply text-zinc-600 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200;
+  }
+
+  .finbar-btn-primary-sm {
+    @apply inline-flex items-center justify-center rounded-[var(--finbar-radius)] border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-zinc-800 disabled:pointer-events-none disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:border-zinc-600 dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-white dark:focus-visible:ring-offset-zinc-950;
+  }
+
+  .finbar-btn-primary-xs {
+    @apply inline-flex items-center justify-center rounded-[var(--finbar-radius)] border border-zinc-800 bg-zinc-900 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-zinc-800 disabled:pointer-events-none disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:border-zinc-600 dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-white dark:focus-visible:ring-offset-zinc-950;
+  }
+
+  /** Form fields — use in raw forms for consistent light/dark surfaces */
+  .finbar-field-label {
+    @apply mb-1 block text-sm text-zinc-600 dark:text-zinc-400;
+  }
+
+  .finbar-field-input {
+    @apply w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder:text-zinc-500 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white dark:placeholder:text-zinc-500;
+  }
+
+  /**
+   * Modaaltitel: op smalle viewports zelfde band als sluitkruis (h-9) voor nette midden-uitlijning.
+   */
+  .finbar-modal-title {
+    @apply m-0 w-full min-w-0 text-lg font-semibold leading-snug text-zinc-900 dark:text-white;
+  }
+  @media (max-width: 639.98px) {
+    .finbar-modal-title {
+      @apply flex min-h-9 items-center;
+    }
+  }
+
+  /**
+   * Eén hoogte voor `rounded-full` toolbars: + knoppen, pill-links, zoekveld, dagstrip.
+   * Hoogte via token (--finbar-height-pill) zodat grote-tekstmodus meeschaalt.
+   */
+  .finbar-pill-height {
+    box-sizing: border-box;
+    min-height: var(--finbar-height-pill, 2rem);
+    height: var(--finbar-height-pill, 2rem);
+  }
+
+  /**
+   * Alleen min-h; zelfde waarde als pill-knoppen (bijv. datumpicker naast
+   * Teamleden/ToDo/Vandaag, uitlijning met Team-paginakop).
+   */
+  .finbar-pill-min-h {
+    min-height: var(--finbar-height-pill, 2rem);
+  }
+
+  /**
+   * Grote artikel- / toolbarblok (Begroting, Vandaag, Netwerk, …).
+   * Op sm+: omlijst en afgerond; op narrow: tot aan de rand, zonder kader.
+   */
+  .finbar-page-article-shell {
+    @apply rounded-[var(--finbar-radius-lg)] border border-zinc-300 bg-zinc-100/80 p-2.5
+      max-sm:rounded-none max-sm:border-0 max-sm:px-0 max-sm:pb-0
+      max-sm:pt-[5px]
+      dark:border-zinc-600 dark:bg-zinc-900/60;
+  }
+
+  .finbar-page-article-shell > header {
+    @apply max-sm:px-3;
+  }
+
+  /**
+   * Binnen `finbar-page-article-shell`: zij-inzet voor knoppen/tekst;
+   * `finbar-list-shell` in deze container loopt (negatieve marge) weer tot de rand.
+   */
+  .finbar-inset-bleed {
+    @apply max-sm:px-3;
+  }
+
+  .finbar-inset-bleed .finbar-list-shell {
+    @apply max-sm:-mx-3 max-w-none sm:max-w-none;
+  }
+
+  /** List / table shells */
+  .finbar-list-shell {
+    @apply divide-y divide-zinc-200 bg-white
+      max-sm:rounded-none max-sm:border-0
+      rounded-lg border border-zinc-200
+      dark:divide-zinc-800 dark:border-zinc-800 dark:bg-zinc-900/50
+      max-sm:dark:border-0;
+  }
+
+  .finbar-list-row {
+    @apply flex flex-col gap-0.5 px-3 py-3 hover:bg-zinc-50 sm:flex-row sm:items-center sm:justify-between sm:px-4 dark:hover:bg-zinc-800/80;
+  }
+
+  /** Inline navigation (e.g. ← back) */
+  .finbar-link-back {
+    @apply text-sm text-zinc-600 transition-colors hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white;
   }
 }

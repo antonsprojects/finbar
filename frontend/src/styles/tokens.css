@@ -1,0 +1,67 @@
+/**
+ * Finbar design tokens — semantic colors switch with `html.dark` (Tailwind class).
+ */
+:root {
+  --finbar-radius-sm: 0.25rem;
+  --finbar-radius: 0.25rem;
+  --finbar-radius-lg: 0.375rem;
+  --finbar-radius-xl: 0.5rem;
+
+  --finbar-space-field-gap: 0.75rem;
+  --finbar-space-section: 1.5rem;
+  --finbar-space-page-x: 1rem;
+  --finbar-space-page-y: 1.5rem;
+
+  /* Light — strong contrast on paper-like surfaces */
+  --finbar-color-bg: rgb(250 250 250);
+  --finbar-color-surface: rgb(255 255 255);
+  --finbar-color-surface-elevated: rgb(244 244 245);
+  --finbar-color-border: rgb(228 228 231);
+  --finbar-color-border-strong: rgb(212 212 216);
+  --finbar-color-text: rgb(24 24 27);
+  --finbar-color-text-muted: rgb(82 82 91);
+  --finbar-color-text-subtle: rgb(113 113 122);
+  --finbar-color-accent: rgb(24 24 27);
+  --finbar-color-accent-hover: rgb(39 39 42);
+  --finbar-color-accent-auth: rgb(82 82 91);
+  --finbar-color-accent-auth-hover: rgb(63 63 70);
+  --finbar-color-danger: rgb(220 38 38);
+  --finbar-color-warning: rgb(180 83 9);
+  --finbar-color-success: rgb(22 101 52);
+
+  --finbar-text-page-title: 1.25rem;
+  --finbar-text-body: 0.875rem;
+  --finbar-text-label: 0.875rem;
+
+  --finbar-touch-min: 44px;
+
+  /** Pill toolbar controls: knoppen, segment toggles, zoekbalk (~Tailwind h-8) */
+  --finbar-height-pill: 2rem;
+}
+
+.dark {
+  --finbar-color-bg: rgb(9 9 11);
+  --finbar-color-surface: rgb(24 24 27);
+  --finbar-color-surface-elevated: rgb(39 39 42);
+  --finbar-color-border: rgb(63 63 70 / 0.55);
+  --finbar-color-border-strong: rgb(82 82 91);
+  --finbar-color-text: rgb(244 244 245);
+  --finbar-color-text-muted: rgb(212 212 216);
+  --finbar-color-text-subtle: rgb(161 161 170);
+  --finbar-color-accent: rgb(244 244 245);
+  --finbar-color-accent-hover: rgb(250 250 250);
+  --finbar-color-accent-auth: rgb(161 161 170);
+  --finbar-color-accent-auth-hover: rgb(212 212 216);
+  --finbar-color-danger: rgb(248 113 113);
+  --finbar-color-warning: rgb(251 191 36);
+  --finbar-color-success: rgb(134 239 172);
+}
+
+html.finbar-large-text {
+  --finbar-space-field-gap: 1rem;
+  --finbar-space-section: 2rem;
+  --finbar-space-page-x: 1.25rem;
+  --finbar-space-page-y: 2rem;
+  /* Iets boven 40px voor touch; omlaag t.o.v. 44px-standaard knoppen */
+  --finbar-height-pill: 2.5rem;
+}

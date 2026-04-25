@@ -29,6 +29,12 @@ enum WorkerAvailabilityStatus {
   UNAVAILABLE
 }
 
+/// Een reeks dagen: deeltijd in een periode, of aanduiding vaste dienst (o.a. teamlid bewerken).
+enum WorkerAvailabilityPeriodKind {
+  PART_TIME
+  FIXED_SHIFT
+}
+
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
@@ -43,6 +49,22 @@ model User {
   scheduleAssignments  ScheduleAssignment[]
   workerAvailabilities WorkerAvailability[]
   preference           UserPreference?
+  passwordResetTokens         PasswordResetToken[]
+  workerAvailabilityPeriods   WorkerAvailabilityPeriod[]
+  jobTeamMembers              JobTeamMember[]
+}
+
+/// One-time token to set a new password (raw token only in e-mail; we store SHA-256).
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique @map("token_hash")
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@map("password_reset_tokens")
 }
 
 model UserPreference {
@@ -68,6 +90,8 @@ model Job {
 
   tasks               Task[]
   scheduleAssignments ScheduleAssignment[]
+  teamMembers         JobTeamMember[]
+  budgetPhases        BudgetPhase[]
 
   @@index([userId])
 }
@@ -76,43 +100,80 @@ model Worker {
   id        String   @id @default(cuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name      String
-  phone     String?
+  firstName String
+  lastName  String   @default("")
   trade     String?
   notes     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  assignedTasks       Task[]
+  taskAssignees       TaskAssignee[]
   scheduleAssignments ScheduleAssignment[]
+  teamMemberships     JobTeamMember[]
   availabilities      WorkerAvailability[]
+  availabilityPeriods WorkerAvailabilityPeriod[]
 
   @@index([userId])
 }
 
-/// Work item on a job. Optional worker + date; separate from schedule (crew on site per day).
+/// Work item on a job. Optional assignees + date; separate from schedule (crew on site per day).
 model Task {
-  id               String     @id @default(cuid())
-  userId           String
-  user             User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  jobId            String
-  job              Job        @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  title            String
-  description      String?
-  status           TaskStatus @default(OPEN)
-  scheduledDate    DateTime?  @db.Date
-  assignedWorkerId String?
-  assignedWorker   Worker?    @relation(fields: [assignedWorkerId], references: [id], onDelete: SetNull)
-  createdAt        DateTime   @default(now())
-  updatedAt        DateTime   @updatedAt
-  completedAt      DateTime?
+  id            String     @id @default(cuid())
+  userId        String
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobId         String
+  job           Job        @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  /// Optioneel: begrotingsregel waar deze dagtaak van afkomstig is; voorkomt dubbele planning op dezelfde dag.
+  budgetLineId  String?    @map("budget_line_id")
+  budgetLine    BudgetLine? @relation(fields: [budgetLineId], references: [id], onDelete: SetNull)
+  title         String
+  description   String?
+  status        TaskStatus @default(OPEN)
+  scheduledDate DateTime?  @db.Date
+  assignees     TaskAssignee[]
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  completedAt   DateTime?
 
   @@index([userId])
   @@index([jobId])
-  @@index([assignedWorkerId])
+  @@index([budgetLineId])
+  @@unique([userId, jobId, scheduledDate, budgetLineId])
 }
 
-/// Who is on which job on which calendar day (planning / crew). Separate from Task.assignedWorkerId.
+/// Many-to-many: welke teamleden horen bij deze taak.
+model TaskAssignee {
+  id        String   @id @default(cuid())
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  workerId  String
+  worker    Worker   @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([taskId, workerId])
+  @@index([taskId])
+  @@index([workerId])
+}
+
+/// Contact op het projectteam (zonder impliciete dagmaand). Inplanning = ScheduleAssignment.
+model JobTeamMember {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobId     String   @map("job_id")
+  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  workerId  String   @map("worker_id")
+  worker    Worker   @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([jobId, workerId])
+  @@index([userId])
+  @@index([jobId])
+  @@map("job_team_members")
+}
+
+/// Who is on which job on which calendar day (planning / crew). Separate from Task-assignees.
 model ScheduleAssignment {
   id        String   @id @default(cuid())
   userId    String
@@ -147,4 +208,58 @@ model WorkerAvailability {
   @@unique([workerId, date])
   @@index([userId])
   @@index([date])
+}
+
+/// Beschikbaarheid als datumbereik (deeltijd) of vaste dienst — naast de dag-cellen in de weekweergave.
+model WorkerAvailabilityPeriod {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workerId  String
+  worker    Worker   @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  dateFrom  DateTime  @db.Date
+  /// Bij vaste dienst: `null` = onbepaard (geen einddatum). Deeltijd heeft altijd een einddatum.
+  dateTo    DateTime? @db.Date
+  kind      WorkerAvailabilityPeriodKind
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([workerId])
+  @@index([workerId, dateFrom])
+}
+
+/// Fase binnen de begroting van een project (bv. Badkamer, Keuken).
+model BudgetPhase {
+  id        String   @id @default(cuid())
+  jobId     String   @map("job_id")
+  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  name      String
+  sortOrder Int      @default(0) @map("sort_order")
+  lines     BudgetLine[]
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([jobId])
+  @@map("budget_phases")
+}
+
+/// Begrotingsregel (ToDo binnen een fase): uren, uurloon, materialen, materiaalkosten.
+model BudgetLine {
+  id                    String   @id @default(cuid())
+  phaseId               String   @map("phase_id")
+  phase                 BudgetPhase @relation(fields: [phaseId], references: [id], onDelete: Cascade)
+  tasks                 Task[]
+  title                 String
+  hours                 Decimal  @default(0) @db.Decimal(10, 2)
+  hourlyRate            Decimal  @default(0) @db.Decimal(10, 2) @map("hourly_rate")
+  materialsDescription  String?  @map("materials_description")
+  materialCost          Decimal  @default(0) @db.Decimal(10, 2) @map("material_cost")
+  sortOrder             Int      @default(0) @map("sort_order")
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  @@index([phaseId])
+  @@map("budget_lines")
 }

@@ -1,15 +1,21 @@
+import bcrypt from "bcrypt";
 import { PrismaClient } from "@prisma/client";
 import { JobStatus, TaskStatus, WorkerAvailabilityStatus } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
+/** Demo login: `demo@finbar.local` / `demo-password-123` */
+const DEMO_PASSWORD = "demo-password-123";
+
 async function main() {
   await prisma.user.deleteMany({ where: { email: "demo@finbar.local" } });
+
+  const passwordHash = await bcrypt.hash(DEMO_PASSWORD, 10);
 
   const user = await prisma.user.create({
     data: {
       email: "demo@finbar.local",
-      passwordHash: "$2a$10$seed.placeholder.hash.not.for.production.use",
+      passwordHash,
       name: "Demo",
     },
   });
@@ -17,7 +23,8 @@ async function main() {
   const w1 = await prisma.worker.create({
     data: {
       userId: user.id,
-      name: "Jan de Vries",
+      firstName: "Jan",
+      lastName: "de Vries",
       trade: "Tegelzetter",
     },
   });
@@ -25,7 +32,8 @@ async function main() {
   const w2 = await prisma.worker.create({
     data: {
       userId: user.id,
-      name: "Piet Jansen",
+      firstName: "Piet",
+      lastName: "Jansen",
       trade: "Stucadoor",
     },
   });
@@ -37,6 +45,13 @@ async function main() {
       address: "Prinsengracht 1, Amsterdam",
       status: JobStatus.ACTIVE,
     },
+  });
+
+  await prisma.jobTeamMember.createMany({
+    data: [
+      { userId: user.id, jobId: job.id, workerId: w1.id },
+      { userId: user.id, jobId: job.id, workerId: w2.id },
+    ],
   });
 
   const today = new Date();
@@ -80,7 +95,9 @@ async function main() {
       title: "Tegels lijmen",
       status: TaskStatus.OPEN,
       scheduledDate: today,
-      assignedWorkerId: w1.id,
+      assignees: {
+        create: [{ workerId: w1.id }],
+      },
     },
   });
 
@@ -94,7 +111,9 @@ async function main() {
     },
   });
 
-  console.log("Seed OK: demo user, workers, job, availability, assignment, task.");
+  console.log(
+    "Seed OK: demo@finbar.local / demo-password-123 — workers, job, availability, assignment, task.",
+  );
 }
 
 main()

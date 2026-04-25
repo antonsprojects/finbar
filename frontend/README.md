@@ -1,6 +1,6 @@
 # Finbar frontend
 
-Vue 3 + TypeScript + Vite + Vue Router + Pinia + Tailwind CSS v4. See [`docs/adr`](../docs/adr/) and [local development](../docs/local-development.md).
+Vue 3 + TypeScript + Vite + Vue Router + Pinia + Tailwind CSS v4. See [`docs/adr`](../docs/adr/), [design system v1](../docs/design-system-v1.md), and [local development](../docs/local-development.md).
 
 ## Setup
 
@@ -10,7 +10,7 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:5173](http://localhost:5173). Routes: `/login`, `/today`, `/week`, `/jobs`, `/jobs/:id`, `/workers`, `/settings`.
+Open [http://localhost:5173](http://localhost:5173). Routes: `/login`, `/today` (operational dashboard), `/week` (availability + crew-on-jobs planner), `/jobs`, `/jobs/:id`, `/workers`, `/settings` (large-text mode and preferences).
 
 ## Environment
 
@@ -22,7 +22,7 @@ If unset in development, the app falls back to `http://127.0.0.1:3001` and logs 
 
 ## Dev proxy
 
-`vite.config.ts` proxies `/api/*` to `http://127.0.0.1:3001` with the `/api` prefix stripped, so you can call `fetch('/api/health')` during local development without CORS.
+`vite.config.ts` forwards **`/api`** to the backend on port **3001** with the same path (e.g. `/api/auth/me` → backend `/api/auth/me`). Use **`fetch('/api/...', { credentials: 'include' })`** so httpOnly session cookies work. Direct calls to `http://127.0.0.1:3001` need CORS; the proxy avoids that for same-origin requests.
 
 ## Scripts
 

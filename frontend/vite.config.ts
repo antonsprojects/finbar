@@ -12,12 +12,15 @@ export default defineConfig({
     },
   },
   server: {
+    // Avoid binding only to [::1]: some browsers resolve `localhost` to 127.0.0.1 (IPv4),
+    // which then gets ERR_CONNECTION_REFUSED if Vite listens on IPv6 loopback only.
+    host: true,
     port: 5173,
+    strictPort: true,
     proxy: {
       "/api": {
         target: "http://127.0.0.1:3001",
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, ""),
       },
     },
   },
