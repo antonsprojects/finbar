@@ -67,6 +67,9 @@ jobs:
     environment: production
     if: needs.image.result == 'success' && github.ref == 'refs/heads/main'
     env:
+      # Absoluut repopad: niet "$DEPLOY_PATH" in de remote script-tekst — GHA eet lege $-vars
+      # en docker compose ziet dan "deploy/.env" i.p.v. /opt/finbar/.env
+      FINBAR_ROOT_FOR_COMPOSE: ${{ secrets.VPS_DEPLOY_PATH != '' && secrets.VPS_DEPLOY_PATH || '/opt/finbar' }}
       GHCR_READ_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
       GHCR_USER: ${{ github.actor }}
       # Worden doorgestuurd naar de VPS-shell (niet in script ingebed) voor .env
@@ -91,8 +94,7 @@ jobs:
             : "${FINBAR_JWT_SECRET:?Zet repository secret FINBAR_JWT_SECRET (min. 32 tekens)}"
             export PUBURL="${FINBAR_PUBLIC_APP_URL:-https://finbar.diversepersonality.com}"
             export FINBAR_IMAGE='${{ needs.image.outputs.image }}'
-            DEPLOY_PATH='${{ secrets.VPS_DEPLOY_PATH }}'
-            DEPLOY_PATH="${DEPLOY_PATH:-/opt/finbar}"
+            export DEPLOY_PATH='${{ env.FINBAR_ROOT_FOR_COMPOSE }}'
             cd "$DEPLOY_PATH"
             if [ -d .git ]; then
               git pull --ff-only
@@ -103,7 +105,7 @@ jobs:
             # .env via bestand in repo: inline heredoc faalt in appleboy (regels → python SyntaxError)
             bash deploy/generate-prod-env.sh
             docker pull "$FINBAR_IMAGE"
-            # absoluut pad: met -f deploy/... zoekt compose ".env" anders in deploy/ i.p.v. reporoot
-            FINBAR_IMAGE="$FINBAR_IMAGE" docker compose --env-file "$DEPLOY_PATH/.env" -f deploy/compose.production.yaml up -d --remove-orphans
+            # --env-file via GHA-gebakken pad: "$DEPLOY_PATH/.env" in script wordt door de runner leeg
+            FINBAR_IMAGE="$FINBAR_IMAGE" docker compose --env-file ${{ env.FINBAR_ROOT_FOR_COMPOSE }}/.env -f deploy/compose.production.yaml up -d --remove-orphans
             docker image prune -f
-            docker compose --env-file "$DEPLOY_PATH/.env" -f deploy/compose.production.yaml ps
+            docker compose --env-file ${{ env.FINBAR_ROOT_FOR_COMPOSE }}/.env -f deploy/compose.production.yaml ps
