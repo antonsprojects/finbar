@@ -1,5 +1,5 @@
-# Plaats op de VPS naast .env in de reporoot; start met (vanaf map met .env):
-#   docker compose --env-file .env -f deploy/compose.production.yaml up -d
+# Plaats .env in de reporoot (naast deploy/); start o.a.:
+#   docker compose --env-file /opt/finbar/.env -f deploy/compose.production.yaml up -d
 #
 # Richt in je reverse proxy (Caddy/Nginx) finbar.diversepersonality.com naar 127.0.0.1:8080
 # (of wijzig de host-poort hieronder).
