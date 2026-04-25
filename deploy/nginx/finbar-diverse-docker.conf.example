@@ -1,17 +1,10 @@
-# Nginx: reverse proxy voor Finbar (Docker bindt 127.0.0.1:8080 → app-poort 3001)
+# Nginx in **Diverse** Docker: finbar.diversepersonality.com
+# Copy into Diverse as docker/nginx/conf.d/finbar.conf (adjust paths only if needed).
+# Finbar app container: finbar-app:3001 (shared Docker network finbar_edge).
 #
-# 1) Pas server_name en poort aan (8080 = FINBAR_PUBLISH_PORT in .env)
-# 2) Kopieer na /etc/nginx/sites-available/finbar (of conf.d/ op RHEL)
-# 3) sudo nginx -t && sudo systemctl reload nginx
-# 4) TLS: certbot (zie docs/deploy-vps.md)
+# TLS: certbot on the **host** writes to /etc/letsencrypt (mounted read-only in Nginx).
+# HTTP: only ACME + redirect to HTTPS; HTTPS serves the app.
 
-upstream finbar_upstream {
-    server 127.0.0.1:8080;
-    keepalive 16;
-}
-
-# HTTP: ACME + alles naar HTTPS (standaard). Tijdens allereerste setup zonder 443:
-# tijdelijk `location / { proxy_pass ... }` gebruiken, cert uitgeven, daarna terug naar 301.
 server {
     listen 80;
     listen [::]:80;
@@ -28,7 +21,6 @@ server {
     }
 }
 
-# HTTPS (paden = certbot):
 server {
     listen 443 ssl;
     listen [::]:443 ssl;
@@ -41,15 +33,15 @@ server {
     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 
     location / {
-        proxy_pass http://finbar_upstream;
-        proxy_http_version 1.1;
+        proxy_pass http://finbar-app:3001;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_set_header Connection "";
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_redirect off;
+        proxy_read_timeout 86400;
     }
 }
-
-# Auto-renew: op de host draait certbot (timer of cron). Na renew Nginx herladen — zie
-# deploy/scripts/letsencrypt-reload-diverse-nginx.sh (Docker) of `systemctl reload nginx` (host).
