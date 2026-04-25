@@ -449,7 +449,7 @@ Implement task management.
 ## Tasks
 - Create task endpoints:
   - list tasks
-  - create task
+- create task
   - update task
   - mark done
   - filter by date/job/status
@@ -607,16 +607,16 @@ Prevent the UI from turning into inconsistent Tailwind chaos.
   - border styles
   - color roles
 - Build minimal reusable components:
-  - Button
-  - Input
-  - Textarea
+- Button
+- Input
+- Textarea
   - Select
   - Toggle
-  - Card
-  - Badge
+- Card
+- Badge
   - Drawer / Sheet
   - Dialog
-  - PageHeader
+- PageHeader
 - Define mobile-first layout rules
 - Define large-text variants
 
@@ -696,7 +696,7 @@ Introduce minimal but real quality control.
 - Add end-to-end tests for:
   - register/login
   - create job
-  - create worker
+- create worker
   - create task
   - assign worker to day
   - view today screen
