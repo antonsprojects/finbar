@@ -9,8 +9,9 @@ services:
     image: ${FINBAR_IMAGE}
     container_name: finbar-app
     restart: unless-stopped
+    # Relatief aan dit bestand (deploy/): reporoot .env, niet deploy/.env
     env_file:
-      - .env
+      - ../.env
     ports:
       - "127.0.0.1:${FINBAR_PUBLISH_PORT:-8080}:3001"
     depends_on:
