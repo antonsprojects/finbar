@@ -103,6 +103,7 @@ jobs:
             # .env via bestand in repo: inline heredoc faalt in appleboy (regels → python SyntaxError)
             bash deploy/generate-prod-env.sh
             docker pull "$FINBAR_IMAGE"
-            FINBAR_IMAGE="$FINBAR_IMAGE" docker compose -f deploy/compose.production.yaml up -d --remove-orphans
+            # expliciet --env-file: interpolatie in compose (POSTGRES_*, etc.) pakt anders .env soms niet
+            FINBAR_IMAGE="$FINBAR_IMAGE" docker compose --env-file .env -f deploy/compose.production.yaml up -d --remove-orphans
             docker image prune -f
-            docker compose -f deploy/compose.production.yaml ps
+            docker compose --env-file .env -f deploy/compose.production.yaml ps
