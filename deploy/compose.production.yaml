@@ -1,10 +1,11 @@
 # Plaats .env in de reporoot (naast deploy/); start o.a.:
 #   docker compose --env-file /opt/finbar/.env -f deploy/compose.production.yaml up -d
 #
-# Publishe poort: NIET alleen 127.0.0.1:8080 — dan kan Nginx in een *ander* Docker-netwerk
-# via host.docker.internal:8080 niet verbinden (lo-only). Bind op alle interfaces; beperk 8080
-# met ufw/iptables tot localhost + Docker-bridges als je wilt.
-# Richt de reverse proxy op host:8080 (of gedeeld Docker network).
+# Publishe: standaard 127.0.0.1:8080 (alleen op de host) — reverse proxy draait in *ander* compose
+# (Diverse Nginx) en verbindt via gedeeld extern netwerk `finbar_edge` → http://finbar-app:3001
+# (niet host.docker.internal; dat geeft op veel Linux-vps'en timeouts). Eénmalig op de server:
+#   docker network create finbar_edge
+# Diverse: nginx-service op netwerk `finbar_edge` zetten, zie deploy-stappen in de repo/PR-beschrijving.
 
 services:
   finbar:
@@ -15,7 +16,10 @@ services:
     env_file:
       - ../.env
     ports:
-      - "${FINBAR_PUBLISH_PORT:-8080}:3001"
+      - "127.0.0.1:${FINBAR_PUBLISH_PORT:-8080}:3001"
+    networks:
+      - default
+      - finbar_edge
     depends_on:
       postgres:
         condition: service_healthy
@@ -45,3 +49,9 @@ services:
 
 volumes:
   finbar_pgdata:
+
+# Eén gedeeld netwerk met Diverse-nginx: `docker network create finbar_edge` (vóór `compose up`)
+networks:
+  finbar_edge:
+    name: finbar_edge
+    external: true
