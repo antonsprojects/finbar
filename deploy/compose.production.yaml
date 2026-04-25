@@ -1,8 +1,10 @@
 # Plaats .env in de reporoot (naast deploy/); start o.a.:
 #   docker compose --env-file /opt/finbar/.env -f deploy/compose.production.yaml up -d
 #
-# Richt in je reverse proxy (Caddy/Nginx) finbar.diversepersonality.com naar 127.0.0.1:8080
-# (of wijzig de host-poort hieronder).
+# Publishe poort: NIET alleen 127.0.0.1:8080 — dan kan Nginx in een *ander* Docker-netwerk
+# via host.docker.internal:8080 niet verbinden (lo-only). Bind op alle interfaces; beperk 8080
+# met ufw/iptables tot localhost + Docker-bridges als je wilt.
+# Richt de reverse proxy op host:8080 (of gedeeld Docker network).
 
 services:
   finbar:
@@ -13,7 +15,7 @@ services:
     env_file:
       - ../.env
     ports:
-      - "127.0.0.1:${FINBAR_PUBLISH_PORT:-8080}:3001"
+      - "${FINBAR_PUBLISH_PORT:-8080}:3001"
     depends_on:
       postgres:
         condition: service_healthy
