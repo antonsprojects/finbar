@@ -90,7 +90,12 @@ export const useAuthStore = defineStore("auth", () => {
     email: string,
     password: string,
     inviteCode: string,
-    opts?: { firstName?: string; lastName?: string; name?: string },
+    opts?: {
+      firstName?: string;
+      lastName?: string;
+      name?: string;
+      companyName?: string;
+    },
   ) {
     const r = await fetch("/api/auth/register", {
       method: "POST",
@@ -103,6 +108,7 @@ export const useAuthStore = defineStore("auth", () => {
         firstName: opts?.firstName,
         lastName: opts?.lastName,
         name: opts?.name,
+        companyName: opts?.companyName,
       }),
     });
     const data = await r.json().catch(() => ({}));

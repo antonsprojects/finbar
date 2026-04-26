@@ -268,13 +268,22 @@ onMounted(() => {
           <div>
             <p class="font-medium text-zinc-900 dark:text-white">
               {{ displayName(user) }}
+              <span
+                v-if="user.role === 'ADMIN'"
+                class="ml-2 font-normal text-zinc-500"
+              >Beheerder</span>
             </p>
             <p class="text-sm text-zinc-500 dark:text-zinc-400">
               {{ user.email }}
               <span v-if="user.companyName"> · {{ user.companyName }}</span>
             </p>
           </div>
-          <FinbarButton variant="secondary" size="sm" @click="impersonate(user)">
+          <FinbarButton
+            v-if="user.role === 'USER'"
+            variant="secondary"
+            size="sm"
+            @click="impersonate(user)"
+          >
             Bekijken als gebruiker
           </FinbarButton>
         </li>

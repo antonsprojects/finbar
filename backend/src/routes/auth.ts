@@ -28,6 +28,7 @@ const registerBody = z.object({
   name: z.string().max(200).optional(),
   firstName: z.string().max(100).optional(),
   lastName: z.string().max(100).optional(),
+  companyName: z.string().max(200).optional(),
 });
 
 const loginBody = z.object({
@@ -73,7 +74,7 @@ export function createAuthRoutes(env: Env): FastifyPluginAsync {
   return async (app) => {
     app.post("/register", async (request, reply) => {
       const body = parseBody(registerBody, request.body);
-      const { email, password, inviteCode, name, firstName, lastName } = body;
+      const { email, password, inviteCode, name, firstName, lastName, companyName } = body;
       const normalizedEmail = email.trim().toLowerCase();
       const exists = await prisma.user.findFirst({
         where: { email: { equals: normalizedEmail, mode: "insensitive" } },
@@ -105,6 +106,7 @@ export function createAuthRoutes(env: Env): FastifyPluginAsync {
       let fn = firstName?.trim() ?? "";
       if (!fn && name?.trim()) fn = name.trim();
       const ln = lastName?.trim() ?? "";
+      const companyTrim = companyName?.trim() ?? "";
       const user = await prisma.$transaction(async (tx) => {
         const created = await tx.user.create({
           data: {
@@ -113,6 +115,7 @@ export function createAuthRoutes(env: Env): FastifyPluginAsync {
             role: AccountRole.USER,
             firstName: fn === "" ? null : fn,
             lastName: ln === "" ? null : ln,
+            companyName: companyTrim === "" ? null : companyTrim,
           },
         });
         const used = await tx.invite.updateMany({

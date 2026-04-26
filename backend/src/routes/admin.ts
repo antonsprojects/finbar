@@ -178,8 +178,8 @@ export function adminRoutes(env: Env): FastifyPluginAsync {
     });
 
     app.get("/users", async (_request, reply) => {
+      // Alle accounts tonen (USER en ADMIN). Alleen USER is te impersonaten.
       const users = await prisma.user.findMany({
-        where: { role: AccountRole.USER },
         orderBy: { createdAt: "desc" },
       });
       return reply.send(ok({ users: users.map(userJson) }));

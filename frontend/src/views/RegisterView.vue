@@ -10,6 +10,7 @@ const email = ref("");
 const password = ref("");
 const firstName = ref("");
 const lastName = ref("");
+const companyName = ref("");
 const route = useRoute();
 const inviteCode = ref(
   typeof route.query.inviteCode === "string" ? route.query.inviteCode : "",
@@ -26,6 +27,7 @@ async function onSubmit() {
     await auth.register(email.value, password.value, inviteCode.value, {
       firstName: firstName.value.trim() || undefined,
       lastName: lastName.value.trim() || undefined,
+      companyName: companyName.value.trim() || undefined,
     });
     await router.push("/");
   } catch (e) {
@@ -58,16 +60,24 @@ async function onSubmit() {
       <FinbarInput
         id="reg-first-name"
         v-model="firstName"
-        label="Voornaam (optioneel)"
+        label="Voornaam"
         type="text"
         autocomplete="given-name"
       />
       <FinbarInput
         id="reg-last-name"
         v-model="lastName"
-        label="Achternaam (optioneel)"
+        label="Achternaam"
         type="text"
         autocomplete="family-name"
+      />
+      <FinbarInput
+        id="reg-company"
+        v-model="companyName"
+        label="Bedrijfsnaam"
+        type="text"
+        maxlength="200"
+        autocomplete="organization"
       />
       <FinbarInput
         id="email"
