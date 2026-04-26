@@ -2,6 +2,7 @@ import type { FastifyPluginAsync } from "fastify";
 import { JobStatus, TaskStatus, type Task } from "@prisma/client";
 import { z } from "zod";
 import { ok } from "../lib/api-response.js";
+import { getEffectiveUserId } from "../lib/auth-context.js";
 import { HttpError } from "../lib/http-error.js";
 import { prisma } from "../lib/prisma.js";
 import { workerDisplayName } from "../lib/workerName.js";
@@ -78,7 +79,7 @@ export const todayRoutes: FastifyPluginAsync = async (app) => {
   app.addHook("preHandler", app.authenticate);
 
   app.get("/", async (request, reply) => {
-    const userId = request.user.sub;
+    const userId = getEffectiveUserId(request);
     const q = parseQuery(todayQuerySchema, request.query);
     const dateStr =
       q.date ?? new Date().toISOString().slice(0, 10);

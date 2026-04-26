@@ -2,6 +2,7 @@ import type { FastifyPluginAsync } from "fastify";
 import { JobStatus, type Job } from "@prisma/client";
 import { z } from "zod";
 import { ok } from "../lib/api-response.js";
+import { getEffectiveUserId } from "../lib/auth-context.js";
 import { HttpError } from "../lib/http-error.js";
 import { listResponse, paginationQuerySchema } from "../lib/pagination.js";
 import { prisma } from "../lib/prisma.js";
@@ -49,7 +50,7 @@ export const jobRoutes: FastifyPluginAsync = async (app) => {
   await app.register(begrotingRoutes);
 
   app.get("/", async (request, reply) => {
-    const userId = request.user.sub;
+    const userId = getEffectiveUserId(request);
     const q = parseQuery(jobListQuerySchema, request.query);
     const where = {
       userId,
@@ -73,7 +74,7 @@ export const jobRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.post("/", async (request, reply) => {
-    const userId = request.user.sub;
+    const userId = getEffectiveUserId(request);
     const body = parseBody(createJobBody, request.body);
     const job = await prisma.job.create({
       data: {
@@ -89,7 +90,7 @@ export const jobRoutes: FastifyPluginAsync = async (app) => {
 
   /** Nemen deel aan het projectteam (los van of ze al op een dag ingepland zijn). */
   app.get("/:id/scheduled-workers", async (request, reply) => {
-    const userId = request.user.sub;
+    const userId = getEffectiveUserId(request);
     const { id } = parseBody(idParams, request.params);
     const job = await prisma.job.findFirst({
       where: { id, userId },
@@ -107,7 +108,7 @@ export const jobRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.get("/:id", async (request, reply) => {
-    const userId = request.user.sub;
+    const userId = getEffectiveUserId(request);
     const { id } = parseBody(idParams, request.params);
     const job = await prisma.job.findFirst({
       where: { id, userId },
@@ -119,7 +120,7 @@ export const jobRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.patch("/:id", async (request, reply) => {
-    const userId = request.user.sub;
+    const userId = getEffectiveUserId(request);
     const { id } = parseBody(idParams, request.params);
     const body = parseBody(updateJobBody, request.body);
     const keys = Object.keys(body) as (keyof typeof body)[];

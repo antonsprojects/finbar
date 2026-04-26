@@ -6,6 +6,7 @@ import {
 } from "@prisma/client";
 import { z } from "zod";
 import { ok } from "../lib/api-response.js";
+import { getEffectiveUserId } from "../lib/auth-context.js";
 import { HttpError } from "../lib/http-error.js";
 import { listResponse } from "../lib/pagination.js";
 import { prisma } from "../lib/prisma.js";
@@ -55,7 +56,7 @@ export const workerAvailabilityRoutes: FastifyPluginAsync = async (app) => {
   app.addHook("preHandler", app.authenticate);
 
   app.get("/", async (request, reply) => {
-    const userId = request.user.sub;
+    const userId = getEffectiveUserId(request);
     const q = parseQuery(listQuerySchema, request.query);
     if (q.from > q.to) {
       throw new HttpError(
@@ -93,7 +94,7 @@ export const workerAvailabilityRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.put("/", async (request, reply) => {
-    const userId = request.user.sub;
+    const userId = getEffectiveUserId(request);
     const body = parseBody(upsertBody, request.body);
 
     const worker = await prisma.worker.findFirst({
@@ -129,7 +130,7 @@ export const workerAvailabilityRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.delete("/:id", async (request, reply) => {
-    const userId = request.user.sub;
+    const userId = getEffectiveUserId(request);
     const { id } = parseBody(idParams, request.params);
 
     const existing = await prisma.workerAvailability.findFirst({

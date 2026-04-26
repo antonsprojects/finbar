@@ -1,8 +1,15 @@
 import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
 import type { Env } from "../config/env.js";
+import { AccountRole, type User, type UserPreference } from "@prisma/client";
 import { ok } from "../lib/api-response.js";
+import {
+  AUTH_COOKIE,
+  getEffectiveUserId,
+  setSessionCookie,
+} from "../lib/auth-context.js";
 import { HttpError } from "../lib/http-error.js";
+import { hashInviteCode } from "../lib/invite-code.js";
 import {
   createPasswordResetSecret,
   hashPasswordResetToken,
@@ -16,6 +23,7 @@ import { parseBody } from "../lib/validate.js";
 const registerBody = z.object({
   email: z.string().email(),
   password: z.string().min(8),
+  inviteCode: z.string().min(1),
   /** @deprecated Gebruik firstName/lastName; vult firstName als die leeg is. */
   name: z.string().max(200).optional(),
   firstName: z.string().max(100).optional(),
@@ -42,14 +50,30 @@ const patchMeBody = z.object({
   companyName: z.string().max(200).nullable().optional(),
 });
 
-const COOKIE = "finbar_token";
-const COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
+type UserWithPreference = Pick<
+  User,
+  "id" | "email" | "role" | "firstName" | "lastName" | "companyName"
+> & {
+  preference?: UserPreference | null;
+};
+
+function authUserJson(user: UserWithPreference) {
+  return {
+    id: user.id,
+    email: user.email,
+    role: user.role,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    companyName: user.companyName,
+    preference: preferenceJson(user.preference ?? null),
+  };
+}
 
 export function createAuthRoutes(env: Env): FastifyPluginAsync {
   return async (app) => {
     app.post("/register", async (request, reply) => {
       const body = parseBody(registerBody, request.body);
-      const { email, password, name, firstName, lastName } = body;
+      const { email, password, inviteCode, name, firstName, lastName } = body;
       const normalizedEmail = email.trim().toLowerCase();
       const exists = await prisma.user.findFirst({
         where: { email: { equals: normalizedEmail, mode: "insensitive" } },
@@ -61,35 +85,61 @@ export function createAuthRoutes(env: Env): FastifyPluginAsync {
           "Dit e-mailadres is al geregistreerd",
         );
       }
+      const inviteCodeHash = hashInviteCode(inviteCode);
+      const invite = await prisma.invite.findUnique({
+        where: { codeHash: inviteCodeHash },
+      });
+      if (
+        !invite ||
+        invite.usedAt ||
+        invite.revokedAt ||
+        invite.expiresAt <= new Date()
+      ) {
+        throw new HttpError(
+          400,
+          "INVALID_INVITE_CODE",
+          "Ongeldige of verlopen uitnodigingscode",
+        );
+      }
       const passwordHash = await hashPassword(password);
       let fn = firstName?.trim() ?? "";
       if (!fn && name?.trim()) fn = name.trim();
       const ln = lastName?.trim() ?? "";
-      const user = await prisma.user.create({
-        data: {
-          email: normalizedEmail,
-          passwordHash,
-          firstName: fn === "" ? null : fn,
-          lastName: ln === "" ? null : ln,
-        },
+      const user = await prisma.$transaction(async (tx) => {
+        const created = await tx.user.create({
+          data: {
+            email: normalizedEmail,
+            passwordHash,
+            role: AccountRole.USER,
+            firstName: fn === "" ? null : fn,
+            lastName: ln === "" ? null : ln,
+          },
+        });
+        const used = await tx.invite.updateMany({
+          where: {
+            id: invite.id,
+            usedAt: null,
+            revokedAt: null,
+            expiresAt: { gt: new Date() },
+          },
+          data: {
+            usedAt: new Date(),
+            usedByUserId: created.id,
+          },
+        });
+        if (used.count !== 1) {
+          throw new HttpError(
+            400,
+            "INVALID_INVITE_CODE",
+            "Ongeldige of verlopen uitnodigingscode",
+          );
+        }
+        return created;
       });
-      const token = await reply.jwtSign({ sub: user.id });
-      reply.setCookie(COOKIE, token, {
-        path: "/",
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: COOKIE_MAX_AGE,
-      });
+      await setSessionCookie(reply, { sub: user.id, role: user.role });
       return reply.send(
         ok({
-          user: {
-            id: user.id,
-            email: user.email,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            companyName: user.companyName,
-          },
+          user: authUserJson(user),
         }),
       );
     });
@@ -107,29 +157,16 @@ export function createAuthRoutes(env: Env): FastifyPluginAsync {
           "Ongeldig e-mailadres of wachtwoord",
         );
       }
-      const token = await reply.jwtSign({ sub: user.id });
-      reply.setCookie(COOKIE, token, {
-        path: "/",
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: COOKIE_MAX_AGE,
-      });
+      await setSessionCookie(reply, { sub: user.id, role: user.role });
       return reply.send(
         ok({
-          user: {
-            id: user.id,
-            email: user.email,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            companyName: user.companyName,
-          },
+          user: authUserJson(user),
         }),
       );
     });
 
     app.post("/logout", async (_request, reply) => {
-      reply.clearCookie(COOKIE, { path: "/" });
+      reply.clearCookie(AUTH_COOKIE, { path: "/" });
       return reply.send(ok({ ok: true as const }));
     });
 
@@ -193,27 +230,58 @@ export function createAuthRoutes(env: Env): FastifyPluginAsync {
       { preHandler: [app.authenticate] },
       async (request, reply) => {
         const sub = request.user.sub;
-        const user = await prisma.user.findUnique({
+        const realUser = await prisma.user.findUnique({
           where: { id: sub },
           select: {
             id: true,
             email: true,
+            role: true,
             firstName: true,
             lastName: true,
             companyName: true,
             preference: true,
           },
         });
-        if (!user) {
+        if (!realUser) {
           throw new HttpError(401, "UNAUTHORIZED", "Gebruiker niet gevonden");
         }
-        const { preference, ...rest } = user;
+        const impersonatingUserId = request.user.impersonatingUserId;
+        if (impersonatingUserId) {
+          if (realUser.role !== AccountRole.ADMIN) {
+            throw new HttpError(403, "FORBIDDEN", "Ongeldige sessie");
+          }
+          const impersonatedUser = await prisma.user.findUnique({
+            where: { id: impersonatingUserId },
+            select: {
+              id: true,
+              email: true,
+              role: true,
+              firstName: true,
+              lastName: true,
+              companyName: true,
+              preference: true,
+            },
+          });
+          if (!impersonatedUser || impersonatedUser.role !== AccountRole.USER) {
+            throw new HttpError(
+              401,
+              "UNAUTHORIZED",
+              "Geïmpersoneerde gebruiker niet gevonden",
+            );
+          }
+          return reply.send(
+            ok({
+              user: authUserJson(impersonatedUser),
+              impersonation: {
+                adminUser: authUserJson(realUser),
+                impersonatedUser: authUserJson(impersonatedUser),
+              },
+            }),
+          );
+        }
         return reply.send(
           ok({
-            user: {
-              ...rest,
-              preference: preferenceJson(preference),
-            },
+            user: authUserJson(realUser),
           }),
         );
       },
@@ -223,7 +291,7 @@ export function createAuthRoutes(env: Env): FastifyPluginAsync {
       "/me",
       { preHandler: [app.authenticate] },
       async (request, reply) => {
-        const sub = request.user.sub;
+        const userId = getEffectiveUserId(request);
         const body = parseBody(patchMeBody, request.body);
         const hasUpdate =
           body.firstName !== undefined ||
@@ -254,24 +322,21 @@ export function createAuthRoutes(env: Env): FastifyPluginAsync {
           data.companyName = t === "" ? null : t;
         }
         const user = await prisma.user.update({
-          where: { id: sub },
+          where: { id: userId },
           data,
           select: {
             id: true,
             email: true,
+            role: true,
             firstName: true,
             lastName: true,
             companyName: true,
             preference: true,
           },
         });
-        const { preference, ...rest } = user;
         return reply.send(
           ok({
-            user: {
-              ...rest,
-              preference: preferenceJson(preference),
-            },
+            user: authUserJson(user),
           }),
         );
       },

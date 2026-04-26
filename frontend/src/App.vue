@@ -1,15 +1,16 @@
 <script setup lang="ts">
 import FinbarShellNavMenu from "@/components/FinbarShellNavMenu.vue";
-import { FinbarAccountMenu, FinbarThemeToggle } from "@/components/ui";
+import { FinbarAccountMenu } from "@/components/ui";
 import { appBrandName } from "@/lib/accountDisplay";
 import { useAuthStore } from "@/stores/auth";
 import { usePreferencesStore } from "@/stores/preferences";
 import { computed, watch } from "vue";
-import { RouterLink, RouterView, useRoute } from "vue-router";
+import { RouterLink, RouterView, useRoute, useRouter } from "vue-router";
 
 const auth = useAuthStore();
 const preferences = usePreferencesStore();
 const route = useRoute();
+const router = useRouter();
 
 const projectShell = computed(() =>
   route.matched.some((r) => r.meta.projectShell === true),
@@ -18,6 +19,8 @@ const projectShell = computed(() =>
 const hideRootChrome = computed(
   () => route.meta.hideRootChrome === true,
 );
+
+const adminRoute = computed(() => route.meta.requiresAdmin === true);
 
 /** Merk in de globale header: bedrijfsnaam of anders Finbar. */
 const globalBrandTitle = computed(() =>
@@ -77,11 +80,58 @@ const fullBleedMainMobile = computed(
     hideRootChrome.value &&
     !routesWithPaddedGlobalMainMobile.has(routeName.value),
 );
+
+async function stopImpersonation() {
+  await auth.stopImpersonation();
+  await router.push("/admin");
+}
 </script>
 
 <template>
+  <div
+    v-if="auth.isImpersonating && auth.impersonation"
+    class="border-b border-amber-300 bg-amber-100 px-4 py-2 text-sm text-amber-950 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-100"
+  >
+    <div class="mx-auto flex max-w-5xl flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+      <span>
+        Je bekijkt Finbar als
+        <strong>{{ auth.impersonation.impersonatedUser.email }}</strong>.
+      </span>
+      <button
+        type="button"
+        class="self-start rounded-[var(--finbar-radius-sm)] border border-amber-700 px-2 py-1 text-xs font-medium hover:bg-amber-200 dark:border-amber-300 dark:hover:bg-amber-900 sm:self-auto"
+        @click="stopImpersonation"
+      >
+        Stop bekijken
+      </button>
+    </div>
+  </div>
+
   <!-- Project workspace: layout owns chrome -->
   <RouterView v-if="projectShell" />
+
+  <!-- Admin workspace -->
+  <div
+    v-else-if="auth.user && adminRoute"
+    class="flex min-h-svh flex-col bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100"
+  >
+    <header
+      class="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800/80 dark:bg-zinc-950"
+    >
+      <div class="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-3">
+        <RouterLink
+          to="/admin"
+          class="font-semibold tracking-tight text-zinc-900 dark:text-white"
+        >
+          Finbar beheer
+        </RouterLink>
+        <FinbarAccountMenu :settings-to="{ name: 'admin' }" />
+      </div>
+    </header>
+    <main class="flex-auto">
+      <RouterView />
+    </main>
+  </div>
 
   <!-- Logged-in home / new project: title + logout only -->
   <div
@@ -151,45 +201,27 @@ const fullBleedMainMobile = computed(
     </main>
   </div>
 
-  <!-- Login / register -->
+  <!-- Login / register / wachtwoord: minimaal — merk + slogan, geen globale nav -->
   <div
     v-else-if="!auth.user"
     class="flex min-h-svh flex-col bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100"
   >
-    <header
-      class="finbar-header sticky top-0 z-10 border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800/80 dark:bg-zinc-950"
+    <main
+      class="finbar-main mx-auto flex w-full max-w-5xl flex-auto flex-col items-center justify-center px-4 py-10 pb-[max(1.5rem,env(safe-area-inset-bottom,0))]"
     >
-      <div
-        class="mx-auto flex w-full max-w-5xl flex-wrap items-center gap-2 px-4 py-3"
-      >
+      <div class="mb-8 w-full text-center">
         <RouterLink
           to="/login"
-          class="mr-2 font-semibold tracking-tight text-zinc-900 dark:text-white"
+          class="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-white"
         >
-          {{ globalBrandTitle }}
+          Finbar
         </RouterLink>
-        <div class="ml-auto flex flex-wrap items-center gap-2 sm:gap-3">
-          <FinbarThemeToggle />
-          <nav class="flex flex-wrap items-center gap-1">
-            <RouterLink
-              to="/login"
-              class="finbar-nav-link"
-            >
-              Inloggen
-            </RouterLink>
-            <RouterLink
-              to="/register"
-              class="finbar-nav-link"
-            >
-              Registreren
-            </RouterLink>
-          </nav>
-        </div>
+        <p
+          class="mx-auto mt-2 max-w-md text-sm leading-relaxed text-zinc-600 dark:text-zinc-400"
+        >
+          Eén overzicht voor je projecten, team en planning.
+        </p>
       </div>
-    </header>
-    <main
-      class="finbar-main mx-auto w-full max-w-5xl flex-auto px-4 py-6 pb-[max(1.5rem,env(safe-area-inset-bottom,0))]"
-    >
       <RouterView />
     </main>
   </div>

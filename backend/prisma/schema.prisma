@@ -23,6 +23,11 @@ enum TaskStatus {
   CANCELLED
 }
 
+enum AccountRole {
+  USER
+  ADMIN
+}
+
 /// Per calendar day: can we plan this worker or not? (Exceptions override recurring patterns in the UI later.)
 enum WorkerAvailabilityStatus {
   AVAILABLE
@@ -36,25 +41,49 @@ enum WorkerAvailabilityPeriodKind {
 }
 
 model User {
-  id            String   @id @default(cuid())
-  email         String   @unique
-  passwordHash  String   @map("password_hash")
-  firstName     String?  @map("first_name")
-  lastName      String?  @map("last_name")
+  id           String      @id @default(cuid())
+  email        String      @unique
+  passwordHash String      @map("password_hash")
+  role         AccountRole @default(USER)
+  firstName    String?     @map("first_name")
+  lastName     String?     @map("last_name")
   /// Getoond als app-naam in de globale header; leeg = standaard “Finbar”.
-  companyName   String?  @map("company_name")
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  companyName  String?     @map("company_name")
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
 
-  jobs                 Job[]
-  workers              Worker[]
-  tasks                Task[]
-  scheduleAssignments  ScheduleAssignment[]
-  workerAvailabilities WorkerAvailability[]
-  preference           UserPreference?
-  passwordResetTokens         PasswordResetToken[]
-  workerAvailabilityPeriods   WorkerAvailabilityPeriod[]
-  jobTeamMembers              JobTeamMember[]
+  jobs                      Job[]
+  workers                   Worker[]
+  tasks                     Task[]
+  scheduleAssignments       ScheduleAssignment[]
+  workerAvailabilities      WorkerAvailability[]
+  preference                UserPreference?
+  passwordResetTokens       PasswordResetToken[]
+  workerAvailabilityPeriods WorkerAvailabilityPeriod[]
+  jobTeamMembers            JobTeamMember[]
+  createdInvites            Invite[]                   @relation("InviteCreatedByAdmin")
+  usedInvites               Invite[]                   @relation("InviteUsedByUser")
+}
+
+model Invite {
+  id               String    @id @default(cuid())
+  email            String
+  codeHash         String    @unique @map("code_hash")
+  createdByAdminId String    @map("created_by_admin_id")
+  createdByAdmin   User      @relation("InviteCreatedByAdmin", fields: [createdByAdminId], references: [id], onDelete: Cascade)
+  expiresAt        DateTime  @map("expires_at")
+  revokedAt        DateTime? @map("revoked_at")
+  usedAt           DateTime? @map("used_at")
+  usedByUserId     String?   @map("used_by_user_id")
+  usedByUser       User?     @relation("InviteUsedByUser", fields: [usedByUserId], references: [id], onDelete: SetNull)
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  @@index([email])
+  @@index([createdByAdminId])
+  @@index([expiresAt])
+  @@index([usedByUserId])
+  @@map("invites")
 }
 
 /// One-time token to set a new password (raw token only in e-mail; we store SHA-256).
@@ -121,27 +150,27 @@ model Worker {
 
 /// Work item on a job. Optional assignees + date; separate from schedule (crew on site per day).
 model Task {
-  id            String     @id @default(cuid())
+  id            String         @id @default(cuid())
   userId        String
-  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   jobId         String
-  job           Job        @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  job           Job            @relation(fields: [jobId], references: [id], onDelete: Cascade)
   /// Optioneel: begrotingsregel waar deze dagtaak van afkomstig is; voorkomt dubbele planning op dezelfde dag.
-  budgetLineId  String?    @map("budget_line_id")
-  budgetLine    BudgetLine? @relation(fields: [budgetLineId], references: [id], onDelete: SetNull)
+  budgetLineId  String?        @map("budget_line_id")
+  budgetLine    BudgetLine?    @relation(fields: [budgetLineId], references: [id], onDelete: SetNull)
   title         String
   description   String?
-  status        TaskStatus @default(OPEN)
-  scheduledDate DateTime?  @db.Date
+  status        TaskStatus     @default(OPEN)
+  scheduledDate DateTime?      @db.Date
   assignees     TaskAssignee[]
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
   completedAt   DateTime?
 
+  @@unique([userId, jobId, scheduledDate, budgetLineId])
   @@index([userId])
   @@index([jobId])
   @@index([budgetLineId])
-  @@unique([userId, jobId, scheduledDate, budgetLineId])
 }
 
 /// Many-to-many: welke teamleden horen bij deze taak.
@@ -215,18 +244,18 @@ model WorkerAvailability {
 
 /// Beschikbaarheid als datumbereik (deeltijd) of vaste dienst — naast de dag-cellen in de weekweergave.
 model WorkerAvailabilityPeriod {
-  id        String   @id @default(cuid())
+  id        String                       @id @default(cuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User                         @relation(fields: [userId], references: [id], onDelete: Cascade)
   workerId  String
-  worker    Worker   @relation(fields: [workerId], references: [id], onDelete: Cascade)
-  dateFrom  DateTime  @db.Date
+  worker    Worker                       @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  dateFrom  DateTime                     @db.Date
   /// Bij vaste dienst: `null` = onbepaard (geen einddatum). Deeltijd heeft altijd een einddatum.
-  dateTo    DateTime? @db.Date
+  dateTo    DateTime?                    @db.Date
   kind      WorkerAvailabilityPeriodKind
   notes     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime                     @default(now())
+  updatedAt DateTime                     @updatedAt
 
   @@index([userId])
   @@index([workerId])
@@ -235,14 +264,14 @@ model WorkerAvailabilityPeriod {
 
 /// Fase binnen de begroting van een project (bv. Badkamer, Keuken).
 model BudgetPhase {
-  id        String   @id @default(cuid())
-  jobId     String   @map("job_id")
-  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  id        String       @id @default(cuid())
+  jobId     String       @map("job_id")
+  job       Job          @relation(fields: [jobId], references: [id], onDelete: Cascade)
   name      String
-  sortOrder Int      @default(0) @map("sort_order")
+  sortOrder Int          @default(0) @map("sort_order")
   lines     BudgetLine[]
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime     @default(now()) @map("created_at")
+  updatedAt DateTime     @updatedAt @map("updated_at")
 
   @@index([jobId])
   @@map("budget_phases")
@@ -250,18 +279,18 @@ model BudgetPhase {
 
 /// Begrotingsregel (ToDo binnen een fase): uren, uurloon, materialen, materiaalkosten.
 model BudgetLine {
-  id                    String   @id @default(cuid())
-  phaseId               String   @map("phase_id")
-  phase                 BudgetPhase @relation(fields: [phaseId], references: [id], onDelete: Cascade)
-  tasks                 Task[]
-  title                 String
-  hours                 Decimal  @default(0) @db.Decimal(10, 2)
-  hourlyRate            Decimal  @default(0) @db.Decimal(10, 2) @map("hourly_rate")
-  materialsDescription  String?  @map("materials_description")
-  materialCost          Decimal  @default(0) @db.Decimal(10, 2) @map("material_cost")
-  sortOrder             Int      @default(0) @map("sort_order")
-  createdAt             DateTime @default(now()) @map("created_at")
-  updatedAt             DateTime @updatedAt @map("updated_at")
+  id                   String      @id @default(cuid())
+  phaseId              String      @map("phase_id")
+  phase                BudgetPhase @relation(fields: [phaseId], references: [id], onDelete: Cascade)
+  tasks                Task[]
+  title                String
+  hours                Decimal     @default(0) @db.Decimal(10, 2)
+  hourlyRate           Decimal     @default(0) @map("hourly_rate") @db.Decimal(10, 2)
+  materialsDescription String?     @map("materials_description")
+  materialCost         Decimal     @default(0) @map("material_cost") @db.Decimal(10, 2)
+  sortOrder            Int         @default(0) @map("sort_order")
+  createdAt            DateTime    @default(now()) @map("created_at")
+  updatedAt            DateTime    @updatedAt @map("updated_at")
 
   @@index([phaseId])
   @@map("budget_lines")

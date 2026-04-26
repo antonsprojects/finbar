@@ -6,6 +6,7 @@ import {
 } from "@prisma/client";
 import { z } from "zod";
 import { ok } from "../lib/api-response.js";
+import { getEffectiveUserId } from "../lib/auth-context.js";
 import { HttpError } from "../lib/http-error.js";
 import { listResponse, paginationQuerySchema } from "../lib/pagination.js";
 import { prisma } from "../lib/prisma.js";
@@ -59,7 +60,7 @@ export const workerRoutes: FastifyPluginAsync = async (app) => {
   app.addHook("preHandler", app.authenticate);
 
   app.get("/", async (request, reply) => {
-    const userId = request.user.sub;
+    const userId = getEffectiveUserId(request);
     const q = parseQuery(paginationQuerySchema, request.query);
     const where = { userId };
     const [rows, total] = await Promise.all([
@@ -80,7 +81,7 @@ export const workerRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.get("/team-display-rules", async (request, reply) => {
-    const userId = request.user.sub;
+    const userId = getEffectiveUserId(request);
     const q = parseQuery(teamDisplayQuery, request.query);
     const rawIds = q.workerIds
       .split(",")
@@ -152,7 +153,7 @@ export const workerRoutes: FastifyPluginAsync = async (app) => {
    * `job.status` is nodig om actieve vs archief in de UI te scheiden.
    */
   app.get("/:id/schedule-jobs", async (request, reply) => {
-    const userId = request.user.sub;
+    const userId = getEffectiveUserId(request);
     const { id } = parseBody(idParams, request.params);
     const worker = await prisma.worker.findFirst({
       where: { id, userId },
@@ -213,7 +214,7 @@ export const workerRoutes: FastifyPluginAsync = async (app) => {
    * inplanningen op dit project zijn (0 dagen); anders 400.
    */
   app.delete("/:id/schedule-jobs/:jobId", async (request, reply) => {
-    const userId = request.user.sub;
+    const userId = getEffectiveUserId(request);
     const { id, jobId } = parseBody(workerAndJobParams, request.params);
     const [worker, job] = await Promise.all([
       prisma.worker.findFirst({ where: { id, userId } }),
@@ -242,7 +243,7 @@ export const workerRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.post("/", async (request, reply) => {
-    const userId = request.user.sub;
+    const userId = getEffectiveUserId(request);
     const body = parseBody(createWorkerBody, request.body);
     const worker = await prisma.worker.create({
       data: {
@@ -257,7 +258,7 @@ export const workerRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.get("/:id", async (request, reply) => {
-    const userId = request.user.sub;
+    const userId = getEffectiveUserId(request);
     const { id } = parseBody(idParams, request.params);
     const worker = await prisma.worker.findFirst({
       where: { id, userId },
@@ -269,7 +270,7 @@ export const workerRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.patch("/:id", async (request, reply) => {
-    const userId = request.user.sub;
+    const userId = getEffectiveUserId(request);
     const { id } = parseBody(idParams, request.params);
     const body = parseBody(updateWorkerBody, request.body);
     const keys = Object.keys(body) as (keyof typeof body)[];

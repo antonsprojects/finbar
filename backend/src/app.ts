@@ -7,8 +7,10 @@ import fs from "node:fs";
 import path from "node:path";
 import Fastify, { type FastifyError, type FastifyReply } from "fastify";
 import type { Env } from "./config/env.js";
+import { AUTH_COOKIE } from "./lib/auth-context.js";
 import { ok, type ApiErrorBody } from "./lib/api-response.js";
 import { HttpError } from "./lib/http-error.js";
+import { adminRoutes } from "./routes/admin.js";
 import { createAuthRoutes } from "./routes/auth.js";
 import { jobRoutes } from "./routes/jobs.js";
 import { preferenceRoutes } from "./routes/preferences.js";
@@ -77,7 +79,7 @@ export async function buildApp(env: Env) {
     secret: env.JWT_SECRET,
     sign: { expiresIn: "7d" },
     cookie: {
-      cookieName: "finbar_token",
+      cookieName: AUTH_COOKIE,
       signed: false,
     },
   });
@@ -136,6 +138,7 @@ export async function buildApp(env: Env) {
     ok({
       service: "finbar-api",
       version: "0.0.1",
+      admin: "/api/admin",
       auth: "/api/auth",
       authForgotPassword: "POST /api/auth/forgot-password",
       authResetPassword: "POST /api/auth/reset-password",
@@ -151,6 +154,7 @@ export async function buildApp(env: Env) {
     }),
   );
 
+  await app.register(adminRoutes(env), { prefix: "/api/admin" });
   await app.register(createAuthRoutes(env), { prefix: "/api/auth" });
   await app.register(jobRoutes, { prefix: "/api/jobs" });
   await app.register(workerRoutes, { prefix: "/api/workers" });

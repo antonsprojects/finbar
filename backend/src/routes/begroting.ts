@@ -2,6 +2,7 @@ import type { FastifyPluginAsync } from "fastify";
 import { Prisma, type BudgetLine, type BudgetPhase } from "@prisma/client";
 import { z } from "zod";
 import { ok } from "../lib/api-response.js";
+import { getEffectiveUserId } from "../lib/auth-context.js";
 import { HttpError } from "../lib/http-error.js";
 import { prisma } from "../lib/prisma.js";
 import { parseBody } from "../lib/validate.js";
@@ -98,7 +99,7 @@ async function requireJob(
 
 export const begrotingRoutes: FastifyPluginAsync = async (app) => {
   app.get("/:id/begroting", async (request, reply) => {
-    const userId = request.user.sub;
+    const userId = getEffectiveUserId(request);
     const { id: jobId } = parseBody(
       jobIdParams,
       request.params as unknown,
@@ -119,7 +120,7 @@ export const begrotingRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.post("/:id/begroting/phases", async (request, reply) => {
-    const userId = request.user.sub;
+    const userId = getEffectiveUserId(request);
     const { id: jobId } = parseBody(
       jobIdParams,
       request.params as unknown,
@@ -148,7 +149,7 @@ export const begrotingRoutes: FastifyPluginAsync = async (app) => {
   app.patch(
     "/:id/begroting/phases/:phaseId",
     async (request, reply) => {
-      const userId = request.user.sub;
+      const userId = getEffectiveUserId(request);
       const { id: jobId, phaseId } = parseBody(
         phaseIdParams,
         request.params,
@@ -186,7 +187,7 @@ export const begrotingRoutes: FastifyPluginAsync = async (app) => {
   app.delete(
     "/:id/begroting/phases/:phaseId",
     async (request, reply) => {
-      const userId = request.user.sub;
+      const userId = getEffectiveUserId(request);
       const { id: jobId, phaseId } = parseBody(
         phaseIdParams,
         request.params as unknown,
@@ -206,7 +207,7 @@ export const begrotingRoutes: FastifyPluginAsync = async (app) => {
   app.post(
     "/:id/begroting/phases/:phaseId/todos",
     async (request, reply) => {
-      const userId = request.user.sub;
+      const userId = getEffectiveUserId(request);
       const { id: jobId, phaseId } = parseBody(
         phaseIdParams,
         request.params as unknown,
@@ -246,7 +247,7 @@ export const begrotingRoutes: FastifyPluginAsync = async (app) => {
   app.patch(
     "/:id/begroting/todos/:lineId",
     async (request, reply) => {
-      const userId = request.user.sub;
+      const userId = getEffectiveUserId(request);
       const { id: jobId, lineId } = parseBody(
         lineIdParams,
         request.params as unknown,
@@ -296,7 +297,7 @@ export const begrotingRoutes: FastifyPluginAsync = async (app) => {
   app.delete(
     "/:id/begroting/todos/:lineId",
     async (request, reply) => {
-      const userId = request.user.sub;
+      const userId = getEffectiveUserId(request);
       const { id: jobId, lineId } = parseBody(
         lineIdParams,
         request.params as unknown,

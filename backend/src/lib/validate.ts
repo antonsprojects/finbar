@@ -32,3 +32,19 @@ export function parseQuery<S extends z.ZodTypeAny>(
   }
   return result.data;
 }
+
+export function parseParams<S extends z.ZodTypeAny>(
+  schema: S,
+  params: unknown,
+): z.infer<S> {
+  const result = schema.safeParse(params);
+  if (!result.success) {
+    throw new HttpError(
+      400,
+      "VALIDATION_ERROR",
+      "Ongeldige routeparameters",
+      result.error.flatten(),
+    );
+  }
+  return result.data;
+}

@@ -22,7 +22,9 @@ async function onSubmit() {
     const redirect =
       typeof route.query.redirect === "string" && route.query.redirect.startsWith("/")
         ? route.query.redirect
-        : "/";
+        : auth.isAdmin
+          ? "/admin"
+          : "/";
     await router.push(redirect);
   } catch (e) {
     error.value = e instanceof Error ? e.message : "Inloggen mislukt";
@@ -33,12 +35,9 @@ async function onSubmit() {
 </script>
 
 <template>
-  <div class="mx-auto max-w-sm space-y-[var(--finbar-space-section)]">
-    <h1
-      class="text-[length:var(--finbar-text-page-title)] font-semibold text-zinc-900 dark:text-white"
-    >
-      Inloggen
-    </h1>
+  <div
+    class="mx-auto w-full max-w-lg rounded-[var(--finbar-radius-lg)] border border-zinc-200 bg-white px-6 py-10 dark:border-zinc-700 dark:bg-zinc-900/40"
+  >
     <form
       class="flex flex-col gap-[var(--finbar-space-field-gap)]"
       @submit.prevent="onSubmit"
@@ -81,7 +80,7 @@ async function onSubmit() {
         {{ loading ? "…" : "Inloggen" }}
       </FinbarButton>
     </form>
-    <p class="text-sm text-zinc-600 dark:text-zinc-500">
+    <p class="mt-[var(--finbar-space-section)] text-sm text-zinc-600 dark:text-zinc-500">
       Nog geen account?
       <RouterLink
         to="/register"

@@ -1,4 +1,5 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
+import type { AccountRole } from "@prisma/client";
 
 declare module "fastify" {
   interface FastifyInstance {
@@ -8,7 +9,7 @@ declare module "fastify" {
 
 declare module "@fastify/jwt" {
   interface FastifyJWT {
-    payload: { sub: string };
-    user: { sub: string };
+    payload: { sub: string; role: AccountRole; impersonatingUserId?: string };
+    user: { sub: string; role: AccountRole; impersonatingUserId?: string };
   }
 }

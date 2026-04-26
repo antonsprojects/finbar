@@ -1,6 +1,7 @@
 import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
 import { ok } from "../lib/api-response.js";
+import { getEffectiveUserId } from "../lib/auth-context.js";
 import { HttpError } from "../lib/http-error.js";
 import { preferenceJson } from "../lib/user-preference-json.js";
 import { prisma } from "../lib/prisma.js";
@@ -27,13 +28,13 @@ export const preferenceRoutes: FastifyPluginAsync = async (app) => {
   app.addHook("preHandler", app.authenticate);
 
   app.get("/", async (request, reply) => {
-    const userId = request.user.sub;
+    const userId = getEffectiveUserId(request);
     const p = await ensurePreference(userId);
     return reply.send(ok({ preference: preferenceJson(p) }));
   });
 
   app.patch("/", async (request, reply) => {
-    const userId = request.user.sub;
+    const userId = getEffectiveUserId(request);
     const body = parseBody(patchBody, request.body);
     const keys = Object.keys(body) as (keyof typeof body)[];
     if (keys.length === 0) {

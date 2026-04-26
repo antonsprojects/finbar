@@ -2,7 +2,7 @@
 import { FinbarButton, FinbarInput } from "@/components/ui";
 import { useAuthStore } from "@/stores/auth";
 import { ref } from "vue";
-import { RouterLink, useRouter } from "vue-router";
+import { RouterLink, useRoute, useRouter } from "vue-router";
 
 defineOptions({ name: "RegisterView" });
 
@@ -10,6 +10,10 @@ const email = ref("");
 const password = ref("");
 const firstName = ref("");
 const lastName = ref("");
+const route = useRoute();
+const inviteCode = ref(
+  typeof route.query.inviteCode === "string" ? route.query.inviteCode : "",
+);
 const error = ref("");
 const loading = ref(false);
 const router = useRouter();
@@ -19,7 +23,7 @@ async function onSubmit() {
   error.value = "";
   loading.value = true;
   try {
-    await auth.register(email.value, password.value, {
+    await auth.register(email.value, password.value, inviteCode.value, {
       firstName: firstName.value.trim() || undefined,
       lastName: lastName.value.trim() || undefined,
     });
@@ -33,16 +37,24 @@ async function onSubmit() {
 </script>
 
 <template>
-  <div class="mx-auto max-w-sm space-y-[var(--finbar-space-section)]">
-    <h1
-      class="text-[length:var(--finbar-text-page-title)] font-semibold text-zinc-900 dark:text-white"
-    >
+  <div
+    class="mx-auto w-full max-w-lg rounded-[var(--finbar-radius-lg)] border border-zinc-200 bg-white px-6 py-10 dark:border-zinc-700 dark:bg-zinc-900/40"
+  >
+    <h2 class="mb-6 text-lg font-semibold text-zinc-900 dark:text-white">
       Registreren
-    </h1>
+    </h2>
     <form
       class="flex flex-col gap-[var(--finbar-space-field-gap)]"
       @submit.prevent="onSubmit"
     >
+      <FinbarInput
+        id="invite-code"
+        v-model="inviteCode"
+        label="Uitnodigingscode"
+        type="text"
+        autocomplete="one-time-code"
+        required
+      />
       <FinbarInput
         id="reg-first-name"
         v-model="firstName"
@@ -88,7 +100,7 @@ async function onSubmit() {
         {{ loading ? "…" : "Account aanmaken" }}
       </FinbarButton>
     </form>
-    <p class="text-sm text-zinc-600 dark:text-zinc-500">
+    <p class="mt-[var(--finbar-space-section)] text-sm text-zinc-600 dark:text-zinc-500">
       Al een account?
       <RouterLink
         to="/login"

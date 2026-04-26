@@ -1,6 +1,14 @@
 import { config as loadDotenv } from "dotenv";
 import { z } from "zod";
 
+function envBoolean(defaultValue: boolean) {
+  return z.preprocess((value) => {
+    if (value === undefined) return defaultValue;
+    if (typeof value === "boolean") return value;
+    return String(value).toLowerCase() === "true";
+  }, z.boolean());
+}
+
 const schema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   HOST: z.string().default("0.0.0.0"),
@@ -22,6 +30,15 @@ const schema = z.object({
   RESEND_API_KEY: z.string().min(1).optional(),
   /** From header for Resend (e.g. Finbar <onboarding@resend.dev> for testing). */
   RESEND_FROM: z.string().min(1).optional(),
+  /** SMTP settings for production transactional e-mail. */
+  EMAIL_HOST: z.string().min(1).optional(),
+  EMAIL_PORT: z.coerce.number().int().positive().default(465),
+  EMAIL_USE_SSL: envBoolean(true),
+  EMAIL_USE_TLS: envBoolean(false),
+  EMAIL_HOST_USER: z.string().min(1).optional(),
+  EMAIL_HOST_PASSWORD: z.string().min(1).optional(),
+  DEFAULT_FROM_EMAIL: z.string().min(1).optional(),
+  SERVER_EMAIL: z.string().min(1).optional(),
 })
   .superRefine((data, ctx) => {
     if (data.NODE_ENV === "production" && data.JWT_SECRET.length < 32) {

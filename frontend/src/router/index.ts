@@ -32,6 +32,12 @@ const router = createRouter({
       component: () => import("@/views/ResetPasswordView.vue"),
     },
     {
+      path: "/admin",
+      name: "admin",
+      meta: { requiresAuth: true, requiresAdmin: true },
+      component: () => import("@/views/AdminView.vue"),
+    },
+    {
       path: "/workers",
       name: "global-workers",
       meta: { requiresAuth: true, hideRootChrome: true },
@@ -195,6 +201,13 @@ router.beforeEach(async (to: RouteLocationNormalized) => {
     };
   }
 
+  const requiresAdmin = to.matched.some(
+    (r: { meta: { requiresAdmin?: boolean } }) => r.meta.requiresAdmin === true,
+  );
+  if (requiresAdmin && !auth.isAdmin) {
+    return { name: "home" };
+  }
+
   if (
     auth.user &&
     (to.name === "login" ||
@@ -205,7 +218,9 @@ router.beforeEach(async (to: RouteLocationNormalized) => {
     const redirect =
       typeof to.query.redirect === "string" && to.query.redirect.startsWith("/")
         ? to.query.redirect
-        : "/";
+        : auth.isAdmin
+          ? "/admin"
+          : "/";
     return redirect;
   }
 

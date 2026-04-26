@@ -70,12 +70,12 @@ async function onSubmit() {
 </script>
 
 <template>
-  <div class="mx-auto max-w-sm space-y-[var(--finbar-space-section)]">
-    <h1
-      class="text-[length:var(--finbar-text-page-title)] font-semibold text-zinc-900 dark:text-white"
-    >
+  <div
+    class="mx-auto w-full max-w-lg space-y-[var(--finbar-space-section)] rounded-[var(--finbar-radius-lg)] border border-zinc-200 bg-white px-6 py-10 dark:border-zinc-700 dark:bg-zinc-900/40"
+  >
+    <h2 class="text-lg font-semibold text-zinc-900 dark:text-white">
       Wachtwoord vergeten
-    </h1>
+    </h2>
     <p
       v-if="!done"
       class="text-sm text-zinc-600 dark:text-zinc-400"

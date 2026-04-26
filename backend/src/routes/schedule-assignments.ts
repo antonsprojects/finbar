@@ -2,6 +2,7 @@ import type { FastifyPluginAsync } from "fastify";
 import { Prisma, type ScheduleAssignment } from "@prisma/client";
 import { z } from "zod";
 import { ok } from "../lib/api-response.js";
+import { getEffectiveUserId } from "../lib/auth-context.js";
 import { HttpError } from "../lib/http-error.js";
 import { listResponse } from "../lib/pagination.js";
 import { prisma } from "../lib/prisma.js";
@@ -140,7 +141,7 @@ export const scheduleAssignmentRoutes: FastifyPluginAsync = async (app) => {
   app.addHook("preHandler", app.authenticate);
 
   app.get("/", async (request, reply) => {
-    const userId = request.user.sub;
+    const userId = getEffectiveUserId(request);
     const q = parseQuery(listQuerySchema, request.query);
     if (q.from > q.to) {
       throw new HttpError(
@@ -184,7 +185,7 @@ export const scheduleAssignmentRoutes: FastifyPluginAsync = async (app) => {
 
   /** Lid toevoegen aan projectteam, zonder dagmaand (inplanning gebeurt apart). */
   app.post("/initial-on-project", async (request, reply) => {
-    const userId = request.user.sub;
+    const userId = getEffectiveUserId(request);
     const body = parseBody(addTeamMemberBody, request.body);
 
     const [worker, job, existing] = await Promise.all([
@@ -241,7 +242,7 @@ export const scheduleAssignmentRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.post("/", async (request, reply) => {
-    const userId = request.user.sub;
+    const userId = getEffectiveUserId(request);
     const body = parseBody(createBody, request.body);
 
     const onTeam = await isWorkerOnProjectTeam(
@@ -260,7 +261,7 @@ export const scheduleAssignmentRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.patch("/:id", async (request, reply) => {
-    const userId = request.user.sub;
+    const userId = getEffectiveUserId(request);
     const { id } = parseBody(idParams, request.params);
     const body = parseBody(updateBody, request.body);
     const keys = Object.keys(body) as (keyof typeof body)[];
@@ -289,7 +290,7 @@ export const scheduleAssignmentRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.delete("/:id", async (request, reply) => {
-    const userId = request.user.sub;
+    const userId = getEffectiveUserId(request);
     const { id } = parseBody(idParams, request.params);
 
     const existing = await prisma.scheduleAssignment.findFirst({
