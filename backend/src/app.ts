@@ -188,6 +188,9 @@ export async function buildApp(env: Env) {
             error: { code: "NOT_FOUND", message: "Niet gevonden" },
           });
         }
+        if (p.startsWith("/assets/") || path.extname(p) !== "") {
+          return reply.code(404).type("text/plain; charset=utf-8").send("Not found");
+        }
         if (request.method !== "GET" && request.method !== "HEAD") {
           return reply.code(405).send();
         }

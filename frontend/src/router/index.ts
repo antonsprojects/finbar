@@ -227,4 +227,23 @@ router.beforeEach(async (to: RouteLocationNormalized) => {
   return true;
 });
 
+router.afterEach(() => {
+  window.sessionStorage.removeItem("finbar:chunk-reload");
+});
+
+router.onError((error, to) => {
+  const message = error instanceof Error ? error.message : String(error);
+  const isStaleChunk =
+    message.includes("Failed to fetch dynamically imported module") ||
+    message.includes("Importing a module script failed") ||
+    message.includes("error loading dynamically imported module");
+  if (!isStaleChunk) return;
+
+  const key = "finbar:chunk-reload";
+  if (window.sessionStorage.getItem(key) === "1") return;
+
+  window.sessionStorage.setItem(key, "1");
+  window.location.assign(to.fullPath);
+});
+
 export default router;
