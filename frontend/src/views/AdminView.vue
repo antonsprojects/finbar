@@ -81,13 +81,14 @@ async function api<T>(
   path: string,
   init?: { method?: string; body?: string; headers?: Record<string, string> },
 ): Promise<T> {
+  const headers = {
+    ...(init?.body ? { "Content-Type": "application/json" } : {}),
+    ...init?.headers,
+  };
   const r = await fetch(path, {
     credentials: "include",
     ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...init?.headers,
-    },
+    headers,
   });
   const json = await r.json().catch(() => ({}));
   if (!r.ok) {
