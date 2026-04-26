@@ -27,7 +27,17 @@ lines = [
     f"PUBLIC_APP_URL={os.environ.get('PUBURL', 'https://finbar.diversepersonality.com')}",
     f"FINBAR_IMAGE={os.environ['FINBAR_IMAGE']}",
 ]
-for k, label in (("FINBAR_RESEND_API_KEY", "RESEND_API_KEY"), ("FINBAR_RESEND_FROM", "RESEND_FROM")):
+optional_env = (
+    ("FINBAR_EMAIL_HOST", "EMAIL_HOST"),
+    ("FINBAR_EMAIL_PORT", "EMAIL_PORT"),
+    ("FINBAR_EMAIL_USE_SSL", "EMAIL_USE_SSL"),
+    ("FINBAR_EMAIL_USE_TLS", "EMAIL_USE_TLS"),
+    ("FINBAR_EMAIL_HOST_USER", "EMAIL_HOST_USER"),
+    ("FINBAR_EMAIL_HOST_PASSWORD", "EMAIL_HOST_PASSWORD"),
+    ("FINBAR_DEFAULT_FROM_EMAIL", "DEFAULT_FROM_EMAIL"),
+    ("FINBAR_SERVER_EMAIL", "SERVER_EMAIL"),
+)
+for k, label in optional_env:
     v = os.environ.get(k) or ""
     if v.strip():
         lines.append(f"{label}={v}")

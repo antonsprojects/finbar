@@ -69,8 +69,14 @@ Gebruik **of** *repository secrets* (Settings → Actions → *Repository* secre
 | `FINBAR_POSTGRES_PASSWORD` | **ja** | Wachtwoord voor Postgres in het Finbar-compose; workflow bouwt `DATABASE_URL` (URL-encoded) en zet `POSTGRES_PASSWORD` |
 | `FINBAR_JWT_SECRET` | **ja** | Minimaal 32 willekeurige tekens; geen regeleindes in de secret |
 | `FINBAR_PUBLIC_APP_URL` | nee | Standaard `https://finbar.diversepersonality.com` — zet alleen om af te wijken |
-| `FINBAR_RESEND_API_KEY` | nee | Optioneel, Resend (wachtwoord-reset e-mail) |
-| `FINBAR_RESEND_FROM` | nee | Optioneel, bijv. `Finbar <noreply@domein.tld>` (alleen zinvol met API-key) |
+| `FINBAR_EMAIL_HOST` | nee | SMTP-host, bijv. `smtp.hostinger.com` |
+| `FINBAR_EMAIL_PORT` | nee | SMTP-poort, bijv. `465` |
+| `FINBAR_EMAIL_USE_SSL` | nee | `true` voor SSL-on-connect op poort 465 |
+| `FINBAR_EMAIL_USE_TLS` | nee | `false` voor Hostinger 465; gebruik STARTTLS alleen als je provider dat vraagt |
+| `FINBAR_EMAIL_HOST_USER` | nee | Volledig mailboxadres voor SMTP-login |
+| `FINBAR_EMAIL_HOST_PASSWORD` | nee | Mailboxwachtwoord of app-password |
+| `FINBAR_DEFAULT_FROM_EMAIL` | nee | Afzender, bijv. `Finbar <mailbox@domein.nl>` |
+| `FINBAR_SERVER_EMAIL` | nee | Server/sender-adres; meestal hetzelfde mailboxadres |
 | `GHCR_READ_TOKEN` | nee | Alleen als het ghcr-package **privé** is: PAT met `read:packages` voor `docker pull` op de server |
 
 Bij een **publiek** `finbar`-package op ghcr is **geen** `GHCR_READ_TOKEN` nodig.
