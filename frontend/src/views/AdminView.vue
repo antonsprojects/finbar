@@ -202,23 +202,26 @@ onMounted(() => {
         Gebruiker uitnodigen
       </h2>
       <form
-        class="flex flex-col gap-3 sm:flex-row sm:items-end"
+        class="grid grid-cols-1 gap-y-2 gap-x-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end"
         @submit.prevent="sendInvite"
       >
-        <div class="w-full min-w-0 sm:flex-1">
-          <FinbarInput
-            id="admin-invite-email"
-            v-model="email"
-            class="w-full"
-            label="E-mailadres"
-            type="email"
-            autocomplete="email"
-            required
-          />
-        </div>
+        <label
+          for="admin-invite-email"
+          class="block text-[length:var(--finbar-text-label)] text-zinc-600 dark:text-zinc-400 sm:col-span-2"
+        >
+          E-mailadres
+        </label>
+        <FinbarInput
+          id="admin-invite-email"
+          v-model="email"
+          class="!h-10 w-full min-w-0 min-h-10 max-h-10 box-border"
+          type="email"
+          autocomplete="email"
+          required
+        />
         <FinbarButton
           type="submit"
-          class="w-full shrink-0 sm:w-auto"
+          class="!h-10 min-h-10 max-h-10 w-full shrink-0 !py-0 sm:w-auto"
           :disabled="loading"
         >
           {{ loading ? "Versturen…" : "Uitnodiging versturen" }}
