@@ -160,6 +160,9 @@ async function onLargeTextToggle(next: boolean) {
       <div class="mt-4">
         <FinbarThemeToggle />
       </div>
+      <p class="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
+        Donkere modus is nog in ontwikkeling.
+      </p>
     </FinbarCard>
 
     <FinbarCard

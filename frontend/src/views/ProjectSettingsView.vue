@@ -93,8 +93,13 @@ async function save() {
 </script>
 
 <template>
-  <div class="mx-auto max-w-lg">
-    <FinbarPageHeader title="Projectinstellingen">
+  <div
+    class="mx-auto max-w-lg px-4 sm:px-0"
+  >
+    <FinbarPageHeader
+      class="max-sm:pt-3 !mb-3 sm:!mb-4"
+      title="Projectinstellingen"
+    >
       <template #description>
         Wijzig naam, adres en status van dit project.
       </template>

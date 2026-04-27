@@ -184,7 +184,7 @@ async function onWorkerEditUpdated() {
       class="finbar-page-article-shell"
     >
       <header
-        class="border-b border-zinc-200/90 pb-2 dark:border-zinc-700/80"
+        class="border-b border-zinc-200/90 py-3 dark:border-zinc-700/80"
       >
         <div
           class="flex min-w-0 items-center justify-between gap-3"
@@ -213,7 +213,7 @@ async function onWorkerEditUpdated() {
 
       <div
         v-if="!pageError"
-        class="mt-2.5 space-y-3 finbar-inset-bleed"
+        class="mt-0 space-y-3 finbar-inset-bleed sm:mt-2.5"
       >
         <p
           v-if="teamDisplayRulesError"
@@ -256,17 +256,9 @@ async function onWorkerEditUpdated() {
         </ul>
         <p
           v-else
-          class="text-sm text-zinc-600 dark:text-zinc-300"
+          class="rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-500 dark:border-zinc-700 dark:bg-zinc-950/50 dark:text-zinc-400"
         >
-          Nog niemand op het projectteam.
-          <button
-            type="button"
-            class="finbar-link cursor-pointer text-left underline-offset-2 hover:underline"
-            @click="teamAddOpen = true"
-          >
-            Kies een teamlid uit je netwerk
-          </button>
-          en plan daarna een dag in de planning.
+          Er zijn nog geen teamleden toegevoegd aan dit project.
         </p>
       </div>
     </article>

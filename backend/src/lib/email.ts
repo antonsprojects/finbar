@@ -19,22 +19,34 @@ function smtpConfigured(env: Env): boolean {
   );
 }
 
+function emailLogPayload(message: EmailMessage): Record<string, unknown> {
+  const base: Record<string, unknown> = {
+    to: message.to,
+    subject: message.subject,
+    text: message.text,
+  };
+  if (message.headers?.["X-Email-Type"] === "password-reset") {
+    const m = message.text.match(/https?:\/\/[^\s<]+/);
+    if (m) base.resetUrl = m[0];
+  }
+  return base;
+}
+
 export async function sendEmail(
   log: FastifyBaseLogger,
   env: Env,
   message: EmailMessage,
 ): Promise<void> {
+  if (env.NODE_ENV === "development") {
+    log.info(
+      emailLogPayload(message),
+      "E-mail not sent; development log mode",
+    );
+    return;
+  }
+
   if (!smtpConfigured(env)) {
-    const base: Record<string, unknown> = {
-      to: message.to,
-      subject: message.subject,
-      text: message.text,
-    };
-    if (message.headers?.["X-Email-Type"] === "password-reset") {
-      const m = message.text.match(/https?:\/\/[^\s<]+/);
-      if (m) base.resetUrl = m[0];
-    }
-    log.info(base, "E-mail not sent; SMTP is not configured");
+    log.info(emailLogPayload(message), "E-mail not sent; SMTP is not configured");
     return;
   }
 

@@ -142,7 +142,7 @@ export async function createBudgetTodo(
   );
   const data = await r.json().catch(() => ({}));
   if (!r.ok) {
-    throw new Error(readApiErrorMessage(data) ?? "Kon ToDo niet aanmaken");
+    throw new Error(readApiErrorMessage(data) ?? "Kon taak niet aanmaken");
   }
   const payload = data as { data?: { todo: BudgetTodoDto } };
   if (!payload.data?.todo) {
@@ -179,7 +179,7 @@ export async function updateBudgetTodo(
   );
   const data = await r.json().catch(() => ({}));
   if (!r.ok) {
-    throw new Error(readApiErrorMessage(data) ?? "Kon ToDo niet bijwerken");
+    throw new Error(readApiErrorMessage(data) ?? "Kon taak niet bijwerken");
   }
   const payload = data as { data?: { todo: BudgetTodoDto } };
   if (!payload.data?.todo) {
@@ -198,7 +198,7 @@ export async function deleteBudgetTodo(
   );
   if (r.status === 204) return;
   const data = await r.json().catch(() => ({}));
-  throw new Error(readApiErrorMessage(data) ?? "Kon ToDo niet verwijderen");
+  throw new Error(readApiErrorMessage(data) ?? "Kon taak niet verwijderen");
 }
 
 export function parseNum(s: string): number {

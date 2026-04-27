@@ -174,7 +174,7 @@ async function submit() {
           d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"
         />
       </svg>
-      Teamleden inplannen
+      Teamlid inplannen
     </button>
 
     <TodayModalShell v-model="modalOpen">
@@ -197,22 +197,22 @@ async function submit() {
 
       <p
         v-else-if="projectTeamWorkerIds.length === 0"
-        class="text-sm text-zinc-600 dark:text-zinc-400"
+        class="rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-500 dark:border-zinc-700 dark:bg-zinc-950/50 dark:text-zinc-400"
       >
-        Nog niemand op het projectteam. Voeg eerst contacten toe via
+        Voeg
         <RouterLink
           :to="{ name: 'project-team-pick', params: { projectId: props.projectId } }"
           class="finbar-link font-medium"
           @click="close"
         >
-          Team / netwerk
+          team leden
         </RouterLink>
-        ; daarna kun je ze per dag inplannen.
+        toe aan dit project, om ze hier te kunnen inplannen.
       </p>
 
       <p
         v-else-if="notScheduledWorkers.length === 0"
-        class="text-sm text-zinc-600 dark:text-zinc-400"
+        class="rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-500 dark:border-zinc-700 dark:bg-zinc-950/50 dark:text-zinc-400"
       >
         Alle projectteamleden staan al ingepland op deze dag, of geen
         passende keuze meer.

@@ -249,7 +249,7 @@ const currentRow = computed(() => {
   };
 });
 
-/** Teamleden die op de gekozen dag ingepland staan (voor contrast in ToDo-toewijzing). */
+/** Teamleden die op de gekozen dag ingepland staan (voor contrast in taaktoewijzing). */
 const scheduledWorkerIdsForDay = computed(() => {
   const row = currentRow.value;
   if (!row) return [] as string[];
@@ -540,12 +540,12 @@ async function toggleTaskDone(taskId: string, completed: boolean) {
               <div class="hidden items-center gap-2 md:flex">
                 <TodayAddToolbarButton
                   pill
-                  label="Teamleden inplannen"
+                  label="Teamlid inplannen"
                   @click="workerPopRef?.open()"
                 />
                 <TodayAddToolbarButton
                   pill
-                  label="ToDo's toevoegen"
+                  label="Taak toevoegen"
                   @click="taskPopRef?.openCreate()"
                 />
               </div>
@@ -618,15 +618,15 @@ async function toggleTaskDone(taskId: string, completed: boolean) {
                 full-width
                 mobile-add-toolbar-layout
                 label="Teamleden"
-                accessibility-label="Teamleden inplannen"
+                accessibility-label="Teamlid inplannen"
                 @click="workerPopRef?.open()"
               />
               <TodayAddToolbarButton
                 pill
                 full-width
                 mobile-add-toolbar-layout
-                label="ToDo's"
-                accessibility-label="ToDo's toevoegen"
+                label="Taken"
+                accessibility-label="Taak toevoegen"
                 @click="taskPopRef?.openCreate()"
               />
             </div>
@@ -650,7 +650,7 @@ async function toggleTaskDone(taskId: string, completed: boolean) {
             </template>
             <p
               v-else
-              class="text-sm text-zinc-500 dark:text-zinc-400"
+              class="rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-500 dark:border-zinc-700 dark:bg-zinc-950/50 dark:text-zinc-400"
             >
               Nog niemand staat ingepland voor deze dag.
             </p>
@@ -661,7 +661,7 @@ async function toggleTaskDone(taskId: string, completed: boolean) {
               <h3
                 class="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
               >
-                ToDo's
+                Taken
               </h3>
               <TaskTodayList
                 :tasks="currentRow.tasks"
@@ -674,9 +674,9 @@ async function toggleTaskDone(taskId: string, completed: boolean) {
             </template>
             <p
               v-else
-              class="text-sm text-zinc-500 dark:text-zinc-400"
+              class="rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-500 dark:border-zinc-700 dark:bg-zinc-950/50 dark:text-zinc-400"
             >
-              Nog geen TODO's gekozen voor deze dag
+              Nog geen taken gekozen voor deze dag
             </p>
           </section>
         </div>

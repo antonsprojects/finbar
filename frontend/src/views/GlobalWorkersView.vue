@@ -104,7 +104,7 @@ async function onWorkerCreated(w: Worker) {
 
     <article
       v-else
-      class="finbar-page-article-shell"
+      class="finbar-page-article-shell max-sm:!pt-0"
     >
       <header
         class="border-b border-zinc-200/90 pb-2 dark:border-zinc-700/80"
@@ -261,7 +261,7 @@ async function onWorkerCreated(w: Worker) {
 
       <div
         v-if="!listError"
-        class="mt-2.5 space-y-3 finbar-inset-bleed"
+        class="mt-0 space-y-3 finbar-inset-bleed sm:mt-2.5"
       >
         <p
           v-if="teamDisplayRulesError"

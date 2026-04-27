@@ -36,7 +36,7 @@ const deletePending = ref(false);
 const formError = ref("");
 
 const heading = computed(() =>
-  mode.value === "edit" ? "ToDo bewerken" : "ToDo toevoegen",
+  mode.value === "edit" ? "Taak bewerken" : "Taak toevoegen",
 );
 
 function resetForm() {
@@ -272,7 +272,7 @@ async function onDelete() {
           :disabled="pending || deletePending"
           @click="onDelete"
         >
-          {{ deletePending ? "Bezig…" : "ToDo verwijderen" }}
+          {{ deletePending ? "Bezig…" : "Taak verwijderen" }}
         </button>
       </div>
     </form>

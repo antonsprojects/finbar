@@ -80,7 +80,7 @@ async function onDelete() {
   const n = name.value.trim() || "deze fase";
   if (
     !confirm(
-      `Fase “${n}” en alle ToDo’s in die fase verwijderen? Dit kan niet ongedaan worden gemaakt.`,
+      `Fase “${n}” en alle taken in die fase verwijderen? Dit kan niet ongedaan worden gemaakt.`,
     )
   ) {
     return;

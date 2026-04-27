@@ -1,3 +1,4 @@
+import { useAuthStore } from "@/stores/auth";
 import { defineStore } from "pinia";
 import { computed, ref, watch } from "vue";
 
@@ -13,10 +14,13 @@ function readStored(): ColorSchemePreference {
 }
 
 export const useThemeStore = defineStore("theme", () => {
+  const auth = useAuthStore();
   const preference = ref<ColorSchemePreference>("system");
   const systemDark = ref(false);
 
+  /** Donkere modus alleen voor admins (incl. bekijken-als terwijl admin ingelogd blijft). */
   const effectiveDark = computed(() => {
+    if (!auth.isAdmin) return false;
     if (preference.value === "dark") return true;
     if (preference.value === "light") return false;
     return systemDark.value;
@@ -41,16 +45,22 @@ export const useThemeStore = defineStore("theme", () => {
     mq = window.matchMedia("(prefers-color-scheme: dark)");
     systemDark.value = mq.matches;
     mq.addEventListener("change", onMq);
-    watch([preference, systemDark], applyDom, { immediate: true });
+    watch(
+      [preference, systemDark, () => auth.isAdmin],
+      applyDom,
+      { immediate: true },
+    );
   }
 
   function setPreference(next: ColorSchemePreference) {
+    if (!auth.isAdmin && next !== "light") return;
     preference.value = next;
     try {
       localStorage.setItem(STORAGE_KEY, next);
     } catch {
       /* ignore quota / private mode */
     }
+    applyDom();
   }
 
   return {

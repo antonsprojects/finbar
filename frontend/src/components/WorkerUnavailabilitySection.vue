@@ -36,7 +36,10 @@ const actionError = ref("");
 const modalOnceOpen = ref(false);
 const modalRecurOpen = ref(false);
 
-const singleDate = ref("");
+const singleFrom = ref("");
+const singleTo = ref("");
+/** false = één dag, true = datumbereik (vakantie e.d.) */
+const periodMultiDay = ref(false);
 const singleNotes = ref("");
 const singlePending = ref(false);
 
@@ -101,7 +104,9 @@ async function loadRows() {
 }
 
 function initSingleDate() {
-  singleDate.value = formatLocalYmd(new Date());
+  const today = formatLocalYmd(new Date());
+  singleFrom.value = today;
+  singleTo.value = today;
 }
 
 watch(
@@ -116,7 +121,24 @@ watch(
 watch(modalOnceOpen, (open) => {
   if (open) {
     actionError.value = "";
+    periodMultiDay.value = false;
     initSingleDate();
+  }
+});
+
+watch(singleFrom, (from) => {
+  if (!periodMultiDay.value && from) {
+    singleTo.value = from;
+    return;
+  }
+  if (from && singleTo.value && singleTo.value < from) {
+    singleTo.value = from;
+  }
+});
+
+watch(periodMultiDay, (multi) => {
+  if (!multi && singleFrom.value) {
+    singleTo.value = singleFrom.value;
   }
 });
 
@@ -134,17 +156,46 @@ function chunkArray<T>(arr: T[], size: number): T[][] {
   return out;
 }
 
+function ymdRange(from: string, to: string): string[] {
+  const [fy, fm, fd] = from.split("-").map(Number);
+  const [ty, tm, td] = to.split("-").map(Number);
+  const cur = new Date(fy, fm - 1, fd);
+  const end = new Date(ty, tm - 1, td);
+  const dates: string[] = [];
+  while (cur <= end) {
+    dates.push(formatLocalYmd(cur));
+    cur.setDate(cur.getDate() + 1);
+  }
+  return dates;
+}
+
 async function addSingle() {
-  if (!singleDate.value.trim()) return;
+  const from = singleFrom.value.trim();
+  const to = periodMultiDay.value
+    ? singleTo.value.trim()
+    : from;
+  if (!from || !to) return;
+  if (from > to) {
+    actionError.value = "De begindatum moet op of vóór de einddatum liggen.";
+    return;
+  }
+  const dates = ymdRange(from, to);
+  const notes = singleNotes.value.trim() || null;
   singlePending.value = true;
   actionError.value = "";
   try {
-    await availability.upsertDay({
-      workerId: props.workerId,
-      date: singleDate.value,
-      status: "UNAVAILABLE",
-      notes: singleNotes.value.trim() || null,
-    });
+    for (const part of chunkArray(dates, 8)) {
+      await Promise.all(
+        part.map((date) =>
+          availability.upsertDay({
+            workerId: props.workerId,
+            date,
+            status: "UNAVAILABLE",
+            notes,
+          }),
+        ),
+      );
+    }
     singleNotes.value = "";
     initSingleDate();
     modalOnceOpen.value = false;
@@ -154,6 +205,20 @@ async function addSingle() {
       e instanceof Error ? e.message : "Kon afwezigheid niet toevoegen";
   } finally {
     singlePending.value = false;
+  }
+}
+
+async function removeOneOff(id: string) {
+  deletingOneOffId.value = id;
+  actionError.value = "";
+  try {
+    await availability.remove(id);
+    await loadRows();
+  } catch (e) {
+    actionError.value =
+      e instanceof Error ? e.message : "Kon item niet verwijderen";
+  } finally {
+    deletingOneOffId.value = null;
   }
 }
 
@@ -192,20 +257,6 @@ async function addRecurring() {
   }
 }
 
-async function removeOneOff(id: string) {
-  deletingOneOffId.value = id;
-  actionError.value = "";
-  try {
-    await availability.remove(id);
-    await loadRows();
-  } catch (e) {
-    actionError.value =
-      e instanceof Error ? e.message : "Kon item niet verwijderen";
-  } finally {
-    deletingOneOffId.value = null;
-  }
-}
-
 async function removeRecurringGroup(g: RecurringUnavailabilityGroup) {
   const key = recurringGroupKey(g);
   deletingRecurringKey.value = key;
@@ -220,6 +271,7 @@ async function removeRecurringGroup(g: RecurringUnavailabilityGroup) {
     deletingRecurringKey.value = null;
   }
 }
+
 </script>
 
 <template>
@@ -233,9 +285,7 @@ async function removeRecurringGroup(g: RecurringUnavailabilityGroup) {
     "
     :aria-labelledby="embedded ? undefined : 'wu-heading'"
   >
-    <header
-      class="space-y-2 border-b border-zinc-200/90 pb-2 dark:border-zinc-700/80"
-    >
+    <header class="space-y-2">
       <h2
         id="wu-heading"
         :class="[
@@ -253,13 +303,13 @@ async function removeRecurringGroup(g: RecurringUnavailabilityGroup) {
         <TodayAddToolbarButton
           pill
           full-width
-          label="Eenmalige datum"
+          label="Eenmalig"
           @click="modalOnceOpen = true"
         />
         <TodayAddToolbarButton
           pill
           full-width
-          label="Herhaalde data"
+          label="Wekelijks"
           @click="modalRecurOpen = true"
         />
       </div>
@@ -290,25 +340,20 @@ async function removeRecurringGroup(g: RecurringUnavailabilityGroup) {
         v-if="bothUnavailabilityEmpty"
         :class="['mt-2.5', embedded ? '' : 'finbar-inset-bleed']"
       >
-        <p
-          class="text-sm text-zinc-600 dark:text-zinc-400"
-        >
-          Voeg eenmalige of herhaalde data toe
-        </p>
         <div
           v-if="!embedded"
-          class="mt-2 grid grid-cols-2 gap-2 md:hidden"
+          class="grid grid-cols-2 gap-2 md:hidden"
         >
           <TodayAddToolbarButton
             pill
             full-width
-            label="Eenmalige datum blokken"
+            label="Eenmalig"
             @click="modalOnceOpen = true"
           />
           <TodayAddToolbarButton
             pill
             full-width
-            label="Herhaalde data blokken"
+            label="Wekelijks"
             @click="modalRecurOpen = true"
           />
         </div>
@@ -321,14 +366,14 @@ async function removeRecurringGroup(g: RecurringUnavailabilityGroup) {
           <div class="md:hidden">
             <TodayAddToolbarButton
               pill
-              label="Eenmalige datum blokken"
+              label="Eenmalig"
               @click="modalOnceOpen = true"
             />
           </div>
           <h3
             class="hidden text-xs font-semibold uppercase tracking-wide text-zinc-500 md:block dark:text-zinc-400"
           >
-            Eenmalige data
+            Losse data
           </h3>
           <ul
             v-if="oneOffRows.length > 0"
@@ -364,14 +409,14 @@ async function removeRecurringGroup(g: RecurringUnavailabilityGroup) {
           <div class="md:hidden">
             <TodayAddToolbarButton
               pill
-              label="Herhaalde data blokken"
+              label="Wekelijks"
               @click="modalRecurOpen = true"
             />
           </div>
           <h3
             class="hidden text-xs font-semibold uppercase tracking-wide text-zinc-500 md:block dark:text-zinc-400"
           >
-            Herhaalde weekdagen
+            Wekelijks
           </h3>
           <ul
             v-if="recurringGroups.length > 0"
@@ -403,33 +448,110 @@ async function removeRecurringGroup(g: RecurringUnavailabilityGroup) {
             v-else
             class="text-sm text-zinc-600 dark:text-zinc-400"
           >
-            Voeg herhaalde data toe
+            Voeg wekelijks toe
           </p>
         </section>
+
       </div>
     </template>
 
     <TodayModalShell v-model="modalOnceOpen">
       <h2 class="finbar-modal-title mb-4">
-        Eenmalige datum
+        Eenmalig
       </h2>
       <form
         class="space-y-4"
         @submit.prevent="addSingle"
       >
         <div>
-          <label
-            class="finbar-field-label"
-            for="wu-modal-date"
-          >Datum</label>
-          <input
-            id="wu-modal-date"
-            v-model="singleDate"
-            type="date"
-            required
-            class="finbar-field-input w-full"
-            :min="minDateStr"
+          <span
+            id="wu-period-mode-label"
+            class="finbar-field-label mb-2 block"
+          >Periode</span>
+          <div
+            class="flex rounded-lg border border-zinc-200 p-0.5 dark:border-zinc-700"
+            role="group"
+            aria-labelledby="wu-period-mode-label"
           >
+            <button
+              type="button"
+              class="min-w-0 flex-1 rounded-md px-2 py-2 text-sm font-medium transition-colors"
+              :class="
+                !periodMultiDay
+                  ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900'
+                  : 'text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800/80'
+              "
+              :aria-pressed="!periodMultiDay"
+              @click="periodMultiDay = false"
+            >
+              Een dag
+            </button>
+            <button
+              type="button"
+              class="min-w-0 flex-1 rounded-md px-2 py-2 text-sm font-medium transition-colors"
+              :class="
+                periodMultiDay
+                  ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900'
+                  : 'text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800/80'
+              "
+              :aria-pressed="periodMultiDay"
+              @click="periodMultiDay = true"
+            >
+              Meerdere dagen
+            </button>
+          </div>
+        </div>
+        <div
+          v-if="!periodMultiDay"
+          class="grid gap-3"
+        >
+          <div>
+            <label
+              class="finbar-field-label"
+              for="wu-modal-from"
+            >Datum</label>
+            <input
+              id="wu-modal-from"
+              v-model="singleFrom"
+              type="date"
+              required
+              class="finbar-field-input w-full"
+              :min="minDateStr"
+            >
+          </div>
+        </div>
+        <div
+          v-else
+          class="grid gap-3 sm:grid-cols-2"
+        >
+          <div>
+            <label
+              class="finbar-field-label"
+              for="wu-modal-from"
+            >Van</label>
+            <input
+              id="wu-modal-from"
+              v-model="singleFrom"
+              type="date"
+              required
+              class="finbar-field-input w-full"
+              :min="minDateStr"
+            >
+          </div>
+          <div>
+            <label
+              class="finbar-field-label"
+              for="wu-modal-to"
+            >Tot</label>
+            <input
+              id="wu-modal-to"
+              v-model="singleTo"
+              type="date"
+              required
+              class="finbar-field-input w-full"
+              :min="singleFrom || minDateStr"
+            >
+          </div>
         </div>
         <div>
           <label
@@ -442,7 +564,7 @@ async function removeRecurringGroup(g: RecurringUnavailabilityGroup) {
             type="text"
             maxlength="10000"
             class="finbar-field-input w-full"
-            placeholder="Bijv. verjaardag"
+            :placeholder="periodMultiDay ? 'Bijv. Vakantie' : 'Bijv. Verjaardag'"
           >
         </div>
         <p
@@ -475,7 +597,7 @@ async function removeRecurringGroup(g: RecurringUnavailabilityGroup) {
 
     <TodayModalShell v-model="modalRecurOpen">
       <h2 class="finbar-modal-title mb-4">
-        Herhaalde data
+        Wekelijks
       </h2>
       <p class="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
         Voegt vanaf vandaag voor het gekozen aantal weken telkens dezelfde
@@ -561,5 +683,6 @@ async function removeRecurringGroup(g: RecurringUnavailabilityGroup) {
         </div>
       </form>
     </TodayModalShell>
+
   </component>
 </template>

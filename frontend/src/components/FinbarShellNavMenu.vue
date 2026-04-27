@@ -148,7 +148,7 @@ onUnmounted(() => {
           class="block px-3 py-2 text-left text-sm font-medium text-zinc-800 transition-colors hover:bg-zinc-100 dark:text-zinc-100 dark:hover:bg-zinc-800"
           @click="closeProjectMenu"
         >
-          Project settings
+          Project instellingen
         </RouterLink>
         <div
           class="my-1 border-b border-zinc-200 dark:border-zinc-700"

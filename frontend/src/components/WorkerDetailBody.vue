@@ -508,10 +508,9 @@ watch(activeMain, (t) => {
           </ul>
           <p
             v-else
-            class="text-sm text-zinc-500 dark:text-zinc-400"
+            class="rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-500 dark:border-zinc-700 dark:bg-zinc-950/50 dark:text-zinc-400"
           >
-            Nog geen dagen met een inplanningsnotitie<template v-if="projectIdForFilter">
-              op dit project</template>.
+            Er zijn nog geen noties toegevoegd over het inplannen.
           </p>
         </section>
         </div>

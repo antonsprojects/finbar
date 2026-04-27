@@ -72,12 +72,8 @@ function isProjectNavActive(item: { activeNames: readonly string[] }) {
 </script>
 
 <template>
-  <div
-    class="flex min-h-svh flex-col bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100"
-  >
-    <header
-      class="sticky top-0 z-10 border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800/80 dark:bg-zinc-950"
-    >
+  <div class="finbar-app-shell">
+    <header class="finbar-app-header sticky top-0 z-10">
       <div
         class="mx-auto grid w-full max-w-5xl gap-y-2 px-4 py-3 max-sm:grid-cols-2 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-center sm:gap-x-3"
       >
@@ -90,7 +86,7 @@ function isProjectNavActive(item: { activeNames: readonly string[] }) {
             class="min-w-0 flex-1 justify-start"
           >
             <span
-              class="min-w-0 flex-1 truncate text-base font-semibold tracking-tight text-zinc-900 dark:text-white"
+              class="min-w-0 flex-1 truncate text-base font-semibold tracking-tight text-[color:var(--finbar-color-text)]"
               :title="jobName || undefined"
             >
               {{ jobName }}
@@ -102,7 +98,7 @@ function isProjectNavActive(item: { activeNames: readonly string[] }) {
           aria-label="Projectnavigatie"
         >
           <div
-            class="inline-flex max-w-full flex-nowrap overflow-x-auto rounded-[var(--finbar-radius)] border border-zinc-300 bg-zinc-100/80 p-0.5 [-ms-overflow-style:none] [scrollbar-width:none] dark:border-zinc-600 dark:bg-zinc-900/60 [&::-webkit-scrollbar]:hidden"
+            class="inline-flex max-w-full flex-nowrap overflow-x-auto rounded-[var(--finbar-radius)] border border-zinc-300 bg-zinc-100/80 p-0.5 [-ms-overflow-style:none] [scrollbar-width:none] dark:border-zinc-600 dark:bg-zinc-900/60 sm:overflow-x-auto [&::-webkit-scrollbar]:hidden"
             role="group"
           >
             <RouterLink

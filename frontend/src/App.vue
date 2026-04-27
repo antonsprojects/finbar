@@ -70,7 +70,6 @@ const navPillIdle =
 const routesWithPaddedGlobalMainMobile = new Set<string>([
   "home",
   "global-settings",
-  "global-workers",
   "global-worker-new",
   "global-worker-detail",
 ]);
@@ -113,15 +112,13 @@ async function stopImpersonation() {
   <!-- Admin workspace -->
   <div
     v-else-if="auth.user && adminRoute"
-    class="flex min-h-svh flex-col bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100"
+    class="finbar-app-shell"
   >
-    <header
-      class="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800/80 dark:bg-zinc-950"
-    >
+    <header class="finbar-app-header">
       <div class="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-3">
         <RouterLink
           to="/admin"
-          class="font-semibold tracking-tight text-zinc-900 dark:text-white"
+          class="font-semibold tracking-tight text-[color:var(--finbar-color-text)]"
         >
           Finbar beheer
         </RouterLink>
@@ -136,11 +133,9 @@ async function stopImpersonation() {
   <!-- Logged-in home / new project: title + logout only -->
   <div
     v-else-if="auth.user && hideRootChrome"
-    class="flex min-h-svh flex-col bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100"
+    class="finbar-app-shell"
   >
-    <header
-      class="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800/80 dark:bg-zinc-950"
-    >
+    <header class="finbar-app-header">
       <div
         class="mx-auto grid w-full max-w-5xl gap-y-2 px-4 py-3 max-sm:grid-cols-2 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-center sm:gap-x-3"
       >
@@ -150,7 +145,7 @@ async function stopImpersonation() {
           <FinbarShellNavMenu mode="global" />
           <RouterLink
             to="/"
-            class="font-semibold tracking-tight text-zinc-900 dark:text-white"
+            class="font-semibold tracking-tight text-[color:var(--finbar-color-text)]"
           >
             {{ globalBrandTitle }}
           </RouterLink>
@@ -204,7 +199,7 @@ async function stopImpersonation() {
   <!-- Login / register / wachtwoord: minimaal — merk + slogan, geen globale nav -->
   <div
     v-else-if="!auth.user"
-    class="flex min-h-svh flex-col bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100"
+    class="finbar-app-shell"
   >
     <main
       class="finbar-main mx-auto flex w-full max-w-5xl flex-auto flex-col items-center justify-center px-4 py-10 pb-[max(1.5rem,env(safe-area-inset-bottom,0))]"
@@ -212,12 +207,12 @@ async function stopImpersonation() {
       <div class="mb-8 w-full text-center">
         <RouterLink
           to="/login"
-          class="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-white"
+          class="text-2xl font-semibold tracking-tight text-[color:var(--finbar-color-text)]"
         >
           Finbar
         </RouterLink>
         <p
-          class="mx-auto mt-2 max-w-md text-sm leading-relaxed text-zinc-600 dark:text-zinc-400"
+          class="mx-auto mt-2 max-w-md text-sm leading-relaxed text-[color:var(--finbar-color-text-muted)]"
         >
           Eén overzicht voor je projecten, team en planning.
         </p>
@@ -229,7 +224,7 @@ async function stopImpersonation() {
   <!-- Fallback (should not occur for logged-in users) -->
   <div
     v-else
-    class="flex min-h-svh flex-col bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100"
+    class="finbar-app-shell"
   >
     <main
       class="finbar-main mx-auto w-full max-w-5xl flex-auto px-4 py-6 pb-[max(1.5rem,env(safe-area-inset-bottom,0))]"

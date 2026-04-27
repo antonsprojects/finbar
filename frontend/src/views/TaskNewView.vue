@@ -159,7 +159,7 @@ async function onSubmit() {
       </div>
       <div>
         <p class="finbar-field-label">
-          Teamleden toevoegen aan ToDo (optioneel)
+          Teamleden toevoegen aan taak (optioneel)
         </p>
         <div
           class="max-h-40 space-y-1.5 overflow-y-auto rounded-md border border-zinc-200 bg-zinc-50 px-2 py-2 dark:border-zinc-700 dark:bg-zinc-950/50"

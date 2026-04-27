@@ -39,19 +39,49 @@
   --finbar-height-pill: 2rem;
 }
 
+/**
+ * Donker thema — palet (aanpasbaar); semantische tokens mappen hierop.
+ * Zie ook `body` / `.finbar-app-shell` voor het canvas.
+ */
 .dark {
-  --finbar-color-bg: rgb(9 9 11);
-  --finbar-color-surface: rgb(24 24 27);
-  --finbar-color-surface-elevated: rgb(39 39 42);
-  --finbar-color-border: rgb(63 63 70 / 0.55);
-  --finbar-color-border-strong: rgb(82 82 91);
-  --finbar-color-text: rgb(244 244 245);
-  --finbar-color-text-muted: rgb(212 212 216);
-  --finbar-color-text-subtle: rgb(161 161 170);
-  --finbar-color-accent: rgb(244 244 245);
-  --finbar-color-accent-hover: rgb(250 250 250);
-  --finbar-color-accent-auth: rgb(161 161 170);
-  --finbar-color-accent-auth-hover: rgb(212 212 216);
+  --finbar-palette-text: #f1f1f3;
+  --finbar-palette-background: #0f1012;
+  --finbar-palette-primary: #b1b5c0;
+  --finbar-palette-secondary: #4f4a5c;
+  --finbar-palette-accent: #9289a0;
+
+  --finbar-color-bg: var(--finbar-palette-background);
+  --finbar-color-surface: color-mix(
+    in srgb,
+    var(--finbar-palette-background) 78%,
+    var(--finbar-palette-secondary) 22%
+  );
+  --finbar-color-surface-elevated: color-mix(
+    in srgb,
+    var(--finbar-palette-background) 62%,
+    var(--finbar-palette-secondary) 38%
+  );
+  --finbar-color-border: color-mix(
+    in srgb,
+    var(--finbar-palette-secondary) 55%,
+    transparent
+  );
+  --finbar-color-border-strong: color-mix(
+    in srgb,
+    var(--finbar-palette-accent) 65%,
+    var(--finbar-palette-secondary) 35%
+  );
+  --finbar-color-text: var(--finbar-palette-text);
+  --finbar-color-text-muted: var(--finbar-palette-primary);
+  --finbar-color-text-subtle: var(--finbar-palette-accent);
+  --finbar-color-accent: var(--finbar-palette-primary);
+  --finbar-color-accent-hover: color-mix(
+    in srgb,
+    var(--finbar-palette-primary) 88%,
+    white 12%
+  );
+  --finbar-color-accent-auth: var(--finbar-palette-accent);
+  --finbar-color-accent-auth-hover: var(--finbar-palette-primary);
   --finbar-color-danger: rgb(248 113 113);
   --finbar-color-warning: rgb(251 191 36);
   --finbar-color-success: rgb(134 239 172);

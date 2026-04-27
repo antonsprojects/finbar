@@ -20,7 +20,7 @@ const props = withDefaults(
     dateYmd: string;
     /** Wie op het projectteam staat; alleen zij als toegewezenen. */
     projectTeamWorkerIds: string[];
-    /** Begrotingsregel-id’s die al een ToDo hebben op deze dag (geen duplicaat). */
+    /** Begrotingsregel-id’s die al een taak hebben op deze dag (geen duplicaat). */
     usedBudgetLineIds?: string[];
     /** Beschikbaarheid voor deze dag (uit /api/today, zelfde als team inplannen). */
     availabilityToday?: TodayAvailabilityRow[];
@@ -130,14 +130,14 @@ const unavailableDaySummary = computed(() => {
 });
 
 const panelHeading = computed(() =>
-  mode.value === "edit" ? "ToDo bewerken" : "ToDo toevoegen",
+  mode.value === "edit" ? "Taak bewerken" : "Taak toevoegen",
 );
 
 const hasBudgetLines = computed(() =>
   budgetPhases.value.some((p) => p.todos.length > 0),
 );
 
-/** Fases + ToDo’s, gefilterd op zoekterm (titel of fasenaam). */
+/** Fases + taken, gefilterd op zoekterm (titel of fasenaam). */
 const phasesForPicker = computed(() => {
   const q = budgetSearch.value.trim().toLowerCase();
   return budgetPhases.value
@@ -353,7 +353,7 @@ function toggleWorker(workerId: string, checked: boolean) {
 async function submit() {
   if (mode.value === "create") {
     if (!selectedBudgetLineId.value) {
-      formError.value = "Kies een ToDo uit de begroting";
+      formError.value = "Kies een taak uit de begroting";
       return;
     }
   }
@@ -361,7 +361,7 @@ async function submit() {
   if (!t) {
     formError.value =
       mode.value === "create"
-        ? "Kies een ToDo uit de begroting"
+        ? "Kies een taak uit de begroting"
         : "Vul een titel in";
     return;
   }
@@ -371,7 +371,7 @@ async function submit() {
     isBudgetLineAlreadyOnDay(selectedBudgetLineId.value)
   ) {
     formError.value =
-      "Deze ToDo is al op deze dag toegevoegd. Kies een andere regel.";
+      "Deze taak is al op deze dag toegevoegd. Kies een andere regel.";
     return;
   }
   pending.value = true;
@@ -452,7 +452,7 @@ async function removeTask() {
           d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"
         />
       </svg>
-      ToDo's toevoegen
+      Taak toevoegen
     </button>
 
     <TodayModalShell v-model="modalOpen">
@@ -468,7 +468,7 @@ async function removeTask() {
           class="space-y-2"
         >
           <p class="finbar-field-label">
-            ToDo uit begroting
+            Selecteer taak
           </p>
           <p
             v-if="budgetLoading"
@@ -484,9 +484,9 @@ async function removeTask() {
           </p>
           <div
             v-else-if="!hasBudgetLines"
-            class="text-sm text-zinc-600 dark:text-zinc-300"
+            class="rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-500 dark:border-zinc-700 dark:bg-zinc-950/50 dark:text-zinc-400"
           >
-            Nog geen regels in de
+            Maak taken aan in de
             <RouterLink
               :to="{
                 name: 'project-begroting',
@@ -497,7 +497,7 @@ async function removeTask() {
             >
               begroting
             </RouterLink>
-            . Voeg daar eerst fases en ToDo’s toe.
+            om ze hier te kunnen inplannen.
           </div>
           <template
             v-else
@@ -546,7 +546,7 @@ async function removeTask() {
                 role="combobox"
                 :aria-expanded="budgetPickerOpen"
                 aria-autocomplete="list"
-                placeholder="Typ om te zoeken op fase of ToDo…"
+                placeholder="Typ om te zoeken op fase of taak…"
                 @focus="onBudgetInputFocus"
                 @blur="onBudgetInputBlur"
                 @input="onBudgetInputFocus"
@@ -564,7 +564,7 @@ async function removeTask() {
                 :style="budgetListPosition"
                 class="max-h-[min(16rem,45vh)] overflow-y-auto rounded-lg border border-zinc-200 bg-white py-1 shadow-lg ring-1 ring-black/5 dark:border-zinc-600 dark:bg-zinc-900 dark:ring-white/10"
                 role="listbox"
-                aria-label="Kies ToDo uit begroting"
+                aria-label="Kies taak uit begroting"
               >
                 <div
                   v-for="phase in phasesForPicker"
@@ -633,7 +633,7 @@ async function removeTask() {
         </div>
         <div>
           <p class="finbar-field-label">
-            Teamleden toevoegen aan ToDo (optioneel)
+            Teamleden toevoegen aan taak (optioneel)
           </p>
           <div
             class="mt-1.5 max-h-48 space-y-2 overflow-y-auto rounded-md border border-zinc-200 bg-zinc-50 px-2 py-2 dark:border-zinc-700 dark:bg-zinc-950/50"
@@ -642,15 +642,15 @@ async function removeTask() {
               v-if="projectTeamWorkerIds.length === 0"
               class="text-sm text-zinc-500 dark:text-zinc-400"
             >
-              Nog niemand op het projectteam. Voeg eerst iemand toe via
+              Er is nog geen team voor dit project. Hier kan je
               <RouterLink
                 :to="{ name: 'project-team-pick', params: { projectId: props.projectId } }"
                 class="finbar-link font-medium"
                 @click="close"
               >
-                Team / netwerk
+                teamleden toevoegen
               </RouterLink>
-              ; daarna kunnen ze op taken worden gezet.
+              .
             </p>
             <p
               v-else-if="assigneeCheckboxWorkers.length === 0"
@@ -711,7 +711,7 @@ async function removeTask() {
                   ? "Opslaan…"
                   : mode === "edit"
                     ? "Opslaan"
-                    : "ToDo toevoegen"
+                    : "Taak toevoegen"
               }}
             </button>
             <button

@@ -107,7 +107,7 @@ function onAddContacts() {
           :disabled="saveBusy"
           @click="onAddContacts"
         >
-          Nieuwe relatie in netwerk
+          Nieuwe relatie toevoegen aan netwerk
         </button>
       </div>
     </div>

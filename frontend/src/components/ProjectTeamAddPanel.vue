@@ -4,7 +4,6 @@ import { useJobsStore } from "@/stores/jobs";
 import { useScheduleAssignmentsStore } from "@/stores/scheduleAssignments";
 import { useWorkersStore } from "@/stores/workers";
 import { computed, nextTick, onMounted, ref, watch } from "vue";
-import { RouterLink } from "vue-router";
 
 defineOptions({ name: "ProjectTeamAddPanel" });
 
@@ -184,6 +183,15 @@ function stageRemove(workerId: string) {
   stagedOnProject.value = next;
 }
 
+function toggleWorker(workerId: string) {
+  if (saving.value) return;
+  if (isOnProject(workerId)) {
+    stageRemove(workerId);
+  } else {
+    stageAdd(workerId);
+  }
+}
+
 async function save(): Promise<void> {
   const base = baselineOnProject.value;
   const staged = stagedOnProject.value;
@@ -310,15 +318,16 @@ defineExpose({
             :data-ptam-worker="w.id"
           >
             <div
-              class="finbar-list-row !flex !w-full !min-w-0 !flex-row !flex-nowrap !items-center !gap-2 !py-1.5 text-zinc-900 dark:text-zinc-100"
+              class="finbar-list-row !flex !w-full !min-w-0 !cursor-pointer !flex-row !flex-nowrap !items-center !gap-2 !py-2.5 text-zinc-900 dark:text-zinc-100"
+              role="button"
+              tabindex="0"
+              @click="toggleWorker(w.id)"
+              @keydown.enter.prevent="toggleWorker(w.id)"
+              @keydown.space.prevent="toggleWorker(w.id)"
             >
-              <RouterLink
-                :to="{
-                  name: 'project-worker-detail',
-                  params: { projectId, id: w.id },
-                }"
-                class="min-w-0 flex-1 truncate font-medium text-zinc-900 no-underline dark:text-zinc-100"
-              >{{ w.name }}</RouterLink>
+              <span
+                class="min-w-0 flex-1 truncate font-medium text-zinc-900 dark:text-zinc-100"
+              >{{ w.name }}</span>
               <div
                 class="flex min-w-0 shrink-0 items-center gap-2 pl-1"
               >
@@ -329,22 +338,22 @@ defineExpose({
                 <button
                   v-if="!isOnProject(w.id)"
                   type="button"
-                  class="inline-flex h-5 !min-h-0 w-[6.5rem] shrink-0 items-center justify-center whitespace-nowrap rounded-[var(--finbar-radius-sm)] border border-zinc-800 bg-zinc-900 px-1.5 text-[0.65rem] font-medium leading-none text-white transition-colors hover:bg-zinc-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/50 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 dark:border-zinc-600 dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-white"
+                  class="inline-flex h-7 !min-h-0 w-[6.5rem] shrink-0 items-center justify-center whitespace-nowrap rounded-[var(--finbar-radius-sm)] border border-zinc-800 bg-zinc-900 px-1.5 text-xs font-medium leading-none text-white transition-colors hover:bg-zinc-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/50 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 dark:border-zinc-600 dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-white"
                   title="Toevoegen aan projectteam (nog niet op een dag inplannen)"
                   :disabled="saving"
                   :aria-busy="saving"
-                  @click="stageAdd(w.id)"
+                  @click.stop="stageAdd(w.id)"
                 >
                   Toevoegen
                 </button>
                 <button
                   v-else
                   type="button"
-                  class="inline-flex h-5 !min-h-0 w-[6.5rem] shrink-0 items-center justify-center whitespace-nowrap rounded-[var(--finbar-radius-sm)] border border-red-600/90 bg-white px-1.5 text-[0.65rem] font-medium leading-none text-red-600 transition-colors hover:bg-red-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400/40 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 dark:border-red-500/80 dark:bg-zinc-900/90 dark:text-red-400 dark:hover:bg-red-950/30"
+                  class="inline-flex h-7 !min-h-0 w-[6.5rem] shrink-0 items-center justify-center whitespace-nowrap rounded-[var(--finbar-radius-sm)] border border-red-600/90 bg-white px-1.5 text-xs font-medium leading-none text-red-600 transition-colors hover:bg-red-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400/40 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 dark:border-red-500/80 dark:bg-zinc-900/90 dark:text-red-400 dark:hover:bg-red-950/30"
                   title="Alle inplanningen op dit project voor dit contact wissen"
                   :disabled="saving"
                   :aria-busy="saving"
-                  @click="stageRemove(w.id)"
+                  @click.stop="stageRemove(w.id)"
                 >
                   Verwijderen
                 </button>

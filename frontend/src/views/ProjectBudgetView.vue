@@ -156,7 +156,7 @@ watch(projectId, () => {
         <p
           class="mt-0.5 text-sm text-zinc-500 dark:text-zinc-400"
         >
-          Een fase groepeert ToDo’s in je begroting, bijv. per ruimte of
+          Een fase groepeert taken in je begroting, bijv. per ruimte of
           werkpakket.
         </p>
         <form
@@ -270,20 +270,22 @@ watch(projectId, () => {
         </p>
       </header>
 
-      <div class="mt-2.5 space-y-3 finbar-inset-bleed">
+      <div class="mt-0 space-y-3 finbar-inset-bleed sm:mt-2.5">
         <p
           v-if="!phases.length"
-          class="text-sm text-zinc-500 dark:text-zinc-400"
+          class="rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-500 dark:border-zinc-700 dark:bg-zinc-950/50 dark:text-zinc-400"
         >
-          Nog geen fases. Klik op
+          Begrotingen bestaan uit verschillende fases, zoals slopen of muren
+          plaatsen. Voor iedere fase kun je taken aanmaken, zoals “plafond
+          verwijderen” of “afval afvoeren”.
+          <br>
           <button
             type="button"
-            class="text-zinc-800 underline decoration-zinc-400 underline-offset-2 dark:text-zinc-200"
+            class="mt-2 text-zinc-800 underline decoration-zinc-400 underline-offset-2 dark:text-zinc-200"
             @click="openPhaseDialog"
           >
-            Fase toevoegen
+            Voeg de eerste fase toe aan dit project.
           </button>
-          .
         </p>
 
         <div
@@ -295,15 +297,28 @@ watch(projectId, () => {
             class="flex flex-wrap items-center justify-between gap-2"
           >
             <div
-              class="min-w-0 max-md:flex max-md:flex-col max-md:gap-0"
+              class="min-w-0 flex-1 max-md:flex max-md:flex-col max-md:gap-0"
             >
               <button
                 type="button"
                 :title="`Fase bewerken: ${phase.name}`"
-                class="cursor-pointer -mx-0.5 max-w-full rounded-md px-0.5 py-0.5 text-left text-base font-bold uppercase tracking-wide text-zinc-900 transition-colors hover:bg-zinc-100/70 hover:text-zinc-950 focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/50 max-md:py-0 max-md:leading-tight dark:text-zinc-100 dark:hover:bg-zinc-800/50 dark:hover:text-white"
+                class="inline-flex cursor-pointer -mx-0.5 max-w-full items-center gap-1.5 rounded-md px-0.5 py-0.5 text-left text-base font-bold uppercase tracking-wide text-zinc-900 transition-colors hover:bg-zinc-100/70 hover:text-zinc-950 focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/50 max-md:py-0 max-md:leading-tight dark:text-zinc-100 dark:hover:bg-zinc-800/50 dark:hover:text-white"
                 @click="openPhaseEdit(phase)"
               >
-                {{ phase.name }}
+                <span class="min-w-0 break-words">{{ phase.name }}</span>
+                <svg
+                  class="h-3.5 w-3.5 shrink-0 text-zinc-500 dark:text-zinc-400"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M12 20h9" />
+                  <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                </svg>
               </button>
               <p
                 v-if="phase.todos.length"
@@ -326,9 +341,9 @@ watch(projectId, () => {
                 pill
                 full-width
                 mobile-add-toolbar-layout
-                label="ToDo toevoegen"
-                label-narrow="ToDo"
-                accessibility-label="ToDo toevoegen"
+                label="Taak toevoegen"
+                label-narrow="Taak"
+                accessibility-label="Taak toevoegen"
                 @click="openTodoCreate(phase)"
               />
             </div>
@@ -346,7 +361,7 @@ watch(projectId, () => {
                   class="border-b border-zinc-200 bg-zinc-50/90 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900/80 dark:text-zinc-400"
                 >
                   <th class="px-3 py-2 text-left text-xs font-medium">
-                    ToDo
+                    Taak
                   </th>
                   <th
                     class="w-16 px-2 py-2 text-left text-xs font-medium"
@@ -424,17 +439,9 @@ watch(projectId, () => {
           </div>
           <p
             v-else
-            class="text-sm text-zinc-500 dark:text-zinc-400"
+            class="rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-500 dark:border-zinc-700 dark:bg-zinc-950/50 dark:text-zinc-400"
           >
-            Nog geen ToDo’s — gebruik
-            <button
-              type="button"
-              class="text-zinc-800 underline decoration-zinc-400 underline-offset-2 dark:text-zinc-200"
-              @click="openTodoCreate(phase)"
-            >
-              ToDo toevoegen
-            </button>
-            .
+            Voeg een eerste taak toe aan de fase {{ phase.name.toLowerCase() }}.
           </p>
         </div>
       </div>
