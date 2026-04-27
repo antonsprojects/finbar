@@ -51,14 +51,14 @@ const panelClass = computed(() => {
     : "relative z-10 flex min-h-0 w-full min-w-0 max-w-2xl flex-col bg-white dark:bg-zinc-900 max-sm:h-full max-sm:max-h-[100dvh] max-sm:max-w-full max-sm:rounded-none max-sm:border-0 sm:max-h-[min(90vh,44rem)] sm:rounded-[var(--finbar-radius-lg)] sm:border sm:border-zinc-200 sm:shadow-2xl dark:sm:border-zinc-700";
 });
 
-/** Mobiel: geen hoge `pt-12` (titel stond onder het kruis); `pr-12` i.p.v. verticale uitweg. */
+/** Mobiel: titel blijft naast het kruis; formulierinhoud houdt gelijke zijmarges. */
 const bodyPadding = computed(() => {
   if (props.wide && props.internalScroll) {
     return "p-0";
   }
   return props.compact
-    ? "px-4 pb-3 max-sm:pt-2.5 max-sm:pr-12 sm:px-4 sm:pt-4 sm:pb-4"
-    : "px-4 pb-3 max-sm:pt-2.5 max-sm:pr-12 sm:px-6 sm:pt-6 sm:pb-3";
+    ? "px-4 pb-3 max-sm:pt-2.5 sm:px-4 sm:pt-4 sm:pb-4"
+    : "px-4 pb-3 max-sm:pt-2.5 sm:px-6 sm:pt-6 sm:pb-3";
 });
 
 const bodyScrollClass = computed(() => {

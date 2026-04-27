@@ -129,7 +129,7 @@
   }
   @media (max-width: 639.98px) {
     .finbar-modal-title {
-      @apply flex min-h-9 items-center;
+      @apply flex min-h-9 items-center pr-12;
     }
   }
 
