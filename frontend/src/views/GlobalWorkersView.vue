@@ -302,20 +302,12 @@ async function onWorkerCreated(w: Worker) {
             </button>
           </li>
         </ul>
-        <p
+        <div
           v-else-if="!workerList.length"
-          class="text-sm text-zinc-600 dark:text-zinc-300"
+          class="rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-500 dark:border-zinc-700 dark:bg-zinc-950/50 dark:text-zinc-400"
         >
-          Nog geen relaties.
-          <button
-            type="button"
-            class="finbar-link cursor-pointer text-left underline-offset-2 hover:underline"
-            @click="workerNewOpen = true"
-          >
-            Voeg er een toe
-          </button>
-          .
-        </p>
+          Voeg je eerste relatie toe aan het netwerk.
+        </div>
         <p
           v-else
           class="text-sm text-zinc-600 dark:text-zinc-300"

@@ -278,14 +278,6 @@ watch(projectId, () => {
           Begrotingen bestaan uit verschillende fases, zoals slopen of muren
           plaatsen. Voor iedere fase kun je taken aanmaken, zoals “plafond
           verwijderen” of “afval afvoeren”.
-          <br>
-          <button
-            type="button"
-            class="mt-2 text-zinc-800 underline decoration-zinc-400 underline-offset-2 dark:text-zinc-200"
-            @click="openPhaseDialog"
-          >
-            Voeg de eerste fase toe aan dit project.
-          </button>
         </p>
 
         <div
