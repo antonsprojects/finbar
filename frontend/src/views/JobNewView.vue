@@ -1,7 +1,8 @@
 <script setup lang="ts">
+import TodayModalShell from "@/components/ui/TodayModalShell.vue";
 import { JOB_STATUS_LABELS, type JobStatus, useJobsStore } from "@/stores/jobs";
-import { ref } from "vue";
-import { RouterLink, useRouter } from "vue-router";
+import { ref, watch } from "vue";
+import { useRouter } from "vue-router";
 
 defineOptions({ name: "JobNewView" });
 
@@ -14,6 +15,17 @@ const notes = ref("");
 const status = ref<JobStatus>("PLANNING");
 const error = ref("");
 const loading = ref(false);
+const modalOpen = ref(true);
+
+function close() {
+  modalOpen.value = false;
+}
+
+watch(modalOpen, (open) => {
+  if (!open) {
+    void router.push({ name: "home" });
+  }
+});
 
 async function onSubmit() {
   error.value = "";
@@ -38,19 +50,12 @@ async function onSubmit() {
 </script>
 
 <template>
-  <div class="mx-auto max-w-lg space-y-4">
-    <div class="flex items-center gap-3">
-      <RouterLink
-        to="/"
-        class="finbar-link-back"
-      >
-        ← Projecten
-      </RouterLink>
-    </div>
-    <h1 class="text-xl font-semibold text-zinc-900 dark:text-white">Nieuw project</h1>
-
+  <TodayModalShell v-model="modalOpen">
+    <h2 class="finbar-modal-title mb-4">
+      Project toevoegen
+    </h2>
     <form
-      class="space-y-3"
+      class="space-y-4"
       @submit.prevent="onSubmit"
     >
       <div>
@@ -122,13 +127,27 @@ async function onSubmit() {
         {{ error }}
       </p>
 
-      <button
-        type="submit"
-        :disabled="loading"
-        class="finbar-btn-primary"
+      <div
+        class="flex flex-col gap-2 border-t border-zinc-200 pt-4 sm:flex-row sm:items-end sm:justify-between sm:gap-4 dark:border-zinc-800"
       >
-        {{ loading ? "Opslaan…" : "Project aanmaken" }}
-      </button>
+        <div class="grid w-full min-w-0 grid-cols-2 gap-2 sm:flex sm:w-auto sm:shrink-0 sm:gap-2">
+          <button
+            type="submit"
+            :disabled="loading"
+            class="finbar-btn-primary-sm min-w-0 justify-center"
+          >
+            {{ loading ? "Opslaan…" : "Project toevoegen" }}
+          </button>
+          <button
+            type="button"
+            class="rounded-md border border-zinc-200 bg-white px-2 py-2 text-sm text-zinc-800 hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700 sm:border-0 sm:bg-transparent sm:px-3 sm:py-1.5 sm:text-zinc-600 sm:hover:bg-zinc-100 sm:dark:hover:bg-zinc-800"
+            :disabled="loading"
+            @click="close"
+          >
+            Annuleren
+          </button>
+        </div>
+      </div>
     </form>
-  </div>
+  </TodayModalShell>
 </template>
