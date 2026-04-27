@@ -5,8 +5,8 @@ import { RouterLink } from "vue-router";
 
 defineOptions({ name: "ForgotPasswordView" });
 
-/** Lokaal: geen echte mail zonder Resend — zie API-terminal. */
-const isDev = import.meta.env.DEV;
+/** Alleen in Vite dev: hint als SMTP ontbreekt (productie build verbergt dit). */
+const showLocalEmailHint = import.meta.env.DEV;
 
 const email = ref("");
 const error = ref("");
@@ -89,15 +89,19 @@ async function onSubmit() {
         instructies. Controleer ook je spam-map.
       </p>
       <p
-        v-if="isDev"
+        v-if="showLocalEmailHint"
         class="rounded-md border border-amber-800/60 bg-amber-950/25 px-3 py-2 text-sm text-amber-100/95 dark:border-amber-700/50"
       >
-        <span class="font-medium text-amber-200">Lokaal:</span>
-        zonder <code class="rounded bg-black/20 px-1 font-mono text-xs">RESEND_API_KEY</code> in
-        <code class="rounded bg-black/20 px-1 font-mono text-xs">backend/.env</code>         wordt er geen e-mail verstuurd. Open de terminal waar
-        <code class="rounded bg-black/20 px-1 font-mono text-xs">npm run dev:api</code> draait en
-        zoek de logregel met <code class="rounded bg-black/20 px-1 font-mono text-xs">resetUrl</code>
-        — daar staat je resetlink.
+        <span class="font-medium text-amber-200">Lokaal (dev):</span>
+        zonder werkende SMTP in
+        <code class="rounded bg-black/20 px-1 font-mono text-xs">backend/.env</code>
+        (<code class="rounded bg-black/20 px-1 font-mono text-xs">EMAIL_HOST</code>,
+        <code class="rounded bg-black/20 px-1 font-mono text-xs">EMAIL_HOST_USER</code>, …) wordt er
+        geen mail verstuurd. In de terminal van
+        <code class="rounded bg-black/20 px-1 font-mono text-xs">npm run dev:api</code>
+        zie je <em>E-mail not sent; SMTP is not configured</em> met veld
+        <code class="rounded bg-black/20 px-1 font-mono text-xs">resetUrl</code>
+        — dat is je resetlink.
       </p>
     </template>
     <form

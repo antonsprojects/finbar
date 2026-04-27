@@ -25,14 +25,16 @@ export async function sendEmail(
   message: EmailMessage,
 ): Promise<void> {
   if (!smtpConfigured(env)) {
-    log.info(
-      {
-        to: message.to,
-        subject: message.subject,
-        text: message.text,
-      },
-      "E-mail not sent; SMTP is not configured",
-    );
+    const base: Record<string, unknown> = {
+      to: message.to,
+      subject: message.subject,
+      text: message.text,
+    };
+    if (message.headers?.["X-Email-Type"] === "password-reset") {
+      const m = message.text.match(/https?:\/\/[^\s<]+/);
+      if (m) base.resetUrl = m[0];
+    }
+    log.info(base, "E-mail not sent; SMTP is not configured");
     return;
   }
 
