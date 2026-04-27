@@ -17,6 +17,7 @@ import {
 import { preferenceJson } from "../lib/user-preference-json.js";
 import { prisma } from "../lib/prisma.js";
 import { hashPassword, verifyPassword } from "../lib/password.js";
+import { sendAdminInviteAcceptedEmail } from "../lib/send-admin-invite-accepted-email.js";
 import { sendPasswordResetEmail } from "../lib/send-password-reset-email.js";
 import { parseBody } from "../lib/validate.js";
 
@@ -89,6 +90,11 @@ export function createAuthRoutes(env: Env): FastifyPluginAsync {
       const inviteCodeHash = hashInviteCode(inviteCode);
       const invite = await prisma.invite.findUnique({
         where: { codeHash: inviteCodeHash },
+        include: {
+          createdByAdmin: {
+            select: { email: true },
+          },
+        },
       });
       if (
         !invite ||
@@ -138,6 +144,18 @@ export function createAuthRoutes(env: Env): FastifyPluginAsync {
           );
         }
         return created;
+      });
+      await sendAdminInviteAcceptedEmail(
+        request.log,
+        env,
+        invite.createdByAdmin.email,
+        user,
+        invite.email,
+      ).catch((error: unknown) => {
+        request.log.error(
+          { err: error, to: invite.createdByAdmin.email, userId: user.id },
+          "failed to send invite acceptance notification",
+        );
       });
       await setSessionCookie(reply, { sub: user.id, role: user.role });
       return reply.send(
