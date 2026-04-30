@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import FinbarDateField from "@/components/ui/FinbarDateField.vue";
 import {
   TASK_STATUS_LABELS,
   type Task,
@@ -212,12 +213,10 @@ async function markDone() {
             class="finbar-field-label"
             for="td-date"
           >Geplande datum</label>
-          <input
+          <FinbarDateField
             id="td-date"
             v-model="scheduledDate"
-            type="date"
-            class="finbar-field-input"
-          >
+          />
         </div>
         <div>
           <p class="finbar-field-label">

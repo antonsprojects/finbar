@@ -10,6 +10,7 @@ import { useTodayStore } from "@/stores/today";
 import { useWorkersStore } from "@/stores/workers";
 import TodayAddTaskPopover from "@/components/TodayAddTaskPopover.vue";
 import TodayAddToolbarButton from "@/components/TodayAddToolbarButton.vue";
+import FinbarCalendarMonthPanel from "@/components/ui/FinbarCalendarMonthPanel.vue";
 import { computed, nextTick, onUnmounted, ref, watch } from "vue";
 import { RouterLink, useRoute } from "vue-router";
 
@@ -51,48 +52,6 @@ const calMonth = ref(
   new Date(new Date().getFullYear(), new Date().getMonth(), 1),
 );
 
-const calMonthTitle = computed(() =>
-  new Intl.DateTimeFormat("nl-NL", {
-    month: "long",
-    year: "numeric",
-  }).format(calMonth.value),
-);
-
-const dayHeaders = ["Ma", "Di", "Wo", "Do", "Vr", "Za", "Zo"] as const;
-
-const leadingBlanks = computed(() => {
-  const dow = calMonth.value.getDay();
-  return dow === 0 ? 6 : dow - 1;
-});
-
-const daysInMonth = computed(() => {
-  const y = calMonth.value.getFullYear();
-  const m = calMonth.value.getMonth();
-  const last = new Date(y, m + 1, 0).getDate();
-  return Array.from({ length: last }, (_, i) => {
-    const d = i + 1;
-    const mm = String(m + 1).padStart(2, "0");
-    const dd = String(d).padStart(2, "0");
-    return { d, ymd: `${y}-${mm}-${dd}` };
-  });
-});
-
-/** Eén grid met weekdagen + dagen zodat kolommen gelijk lopen. */
-type CalBodyCell =
-  | { kind: "blank"; key: string }
-  | { kind: "day"; d: number; ymd: string };
-
-const calendarBodyCells = computed((): CalBodyCell[] => {
-  const out: CalBodyCell[] = [];
-  for (let i = 0; i < leadingBlanks.value; i++) {
-    out.push({ kind: "blank", key: `b${i}` });
-  }
-  for (const day of daysInMonth.value) {
-    out.push({ kind: "day", d: day.d, ymd: day.ymd });
-  }
-  return out;
-});
-
 function dayBlockHeading(ymd: string): string {
   const calToday = calendarTodayYmd.value;
   const calTomorrow = addDaysFromYmd(calToday, 1);
@@ -116,16 +75,6 @@ function dayBlockHeading(ymd: string): string {
 }
 
 const currentHeading = computed(() => dayBlockHeading(currentYmd.value));
-
-function prevCalMonth() {
-  const d = calMonth.value;
-  calMonth.value = new Date(d.getFullYear(), d.getMonth() - 1, 1);
-}
-
-function nextCalMonth() {
-  const d = calMonth.value;
-  calMonth.value = new Date(d.getFullYear(), d.getMonth() + 1, 1);
-}
 
 function changeDay(delta: number) {
   dayOffset.value += delta;
@@ -461,69 +410,17 @@ async function toggleTaskDone(taskId: string, completed: boolean) {
 
               <div
                 v-if="pickerOpen"
-                class="absolute top-full z-30 mt-2 w-60 max-w-[min(15rem,calc(100vw-2rem))] rounded-xl border border-zinc-300 bg-white p-3 shadow-lg max-md:left-1/2 max-md:-translate-x-1/2 md:left-0 dark:border-zinc-700 dark:bg-zinc-900"
+                class="absolute top-full z-30 mt-2 w-[min(19rem,calc(100vw-1rem))] min-w-0 rounded-xl border border-zinc-300 bg-white p-3 shadow-lg max-md:left-1/2 max-md:-translate-x-1/2 md:left-0 dark:border-zinc-700 dark:bg-zinc-900"
                 role="dialog"
                 aria-label="Kalender"
                 @click.stop
               >
-                <div class="mb-2 flex items-center justify-between">
-                  <button
-                    type="button"
-                    class="rounded px-2 py-1 text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"
-                    aria-label="Vorige maand"
-                    @click="prevCalMonth"
-                  >
-                    ‹
-                  </button>
-                  <span
-                    class="text-center text-sm font-semibold capitalize text-zinc-800 dark:text-zinc-100"
-                  >
-                    {{ calMonthTitle }}
-                  </span>
-                  <button
-                    type="button"
-                    class="rounded px-2 py-1 text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"
-                    aria-label="Volgende maand"
-                    @click="nextCalMonth"
-                  >
-                    ›
-                  </button>
-                </div>
-
-                <div
-                  class="grid min-w-0 grid-cols-7 gap-x-0.5 gap-y-0.5"
-                >
-                  <span
-                    v-for="h in dayHeaders"
-                    :key="h"
-                    class="flex items-center justify-center py-1 text-center text-[0.6875rem] font-semibold text-zinc-400 dark:text-zinc-500"
-                  >{{ h }}</span>
-                  <template
-                    v-for="cell in calendarBodyCells"
-                    :key="cell.kind === 'day' ? cell.ymd : cell.key"
-                  >
-                    <span
-                      v-if="cell.kind === 'blank'"
-                      class="min-h-9 min-w-0"
-                      aria-hidden="true"
-                    />
-                    <button
-                      v-else
-                      type="button"
-                      class="flex min-h-9 min-w-0 w-full items-center justify-center rounded py-1 text-center text-sm font-normal tabular-nums"
-                      :class="[
-                        cell.ymd === currentYmd
-                          ? 'bg-zinc-900 font-semibold text-white dark:bg-zinc-100 dark:text-zinc-900'
-                          : cell.ymd === calendarTodayYmd
-                            ? 'border border-zinc-400 text-zinc-800 dark:border-zinc-500 dark:text-zinc-100'
-                            : 'text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800',
-                      ]"
-                      @click="pickDate(cell.ymd)"
-                    >
-                      {{ cell.d }}
-                    </button>
-                  </template>
-                </div>
+                <FinbarCalendarMonthPanel
+                  v-model:month-anchor="calMonth"
+                  :selected-ymd="currentYmd"
+                  :today-ymd="calendarTodayYmd"
+                  @pick="pickDate"
+                />
                 <button
                   type="button"
                   class="mt-3 block w-full rounded-md border border-zinc-300 bg-zinc-50 py-2 text-sm font-medium text-zinc-800 transition-colors hover:bg-zinc-100 md:hidden dark:border-zinc-600 dark:bg-zinc-800/60 dark:text-zinc-100 dark:hover:bg-zinc-800"

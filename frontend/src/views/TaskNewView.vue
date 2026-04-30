@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import FinbarDateField from "@/components/ui/FinbarDateField.vue";
 import { TASK_STATUS_LABELS, type TaskStatus, useTasksStore } from "@/stores/tasks";
 import { useWorkersStore } from "@/stores/workers";
 import { useJobsStore } from "@/stores/jobs";
@@ -150,12 +151,10 @@ async function onSubmit() {
           class="finbar-field-label"
           for="tn-date"
         >Geplande datum</label>
-        <input
+        <FinbarDateField
           id="tn-date"
           v-model="scheduledDate"
-          type="date"
-          class="finbar-field-input"
-        >
+        />
       </div>
       <div>
         <p class="finbar-field-label">

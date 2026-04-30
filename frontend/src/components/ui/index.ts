@@ -3,6 +3,8 @@ export { default as FinbarAccountMenu } from "./FinbarAccountMenu.vue";
 export { default as FinbarBadge } from "./FinbarBadge.vue";
 export { default as FinbarButton } from "./FinbarButton.vue";
 export { default as FinbarCard } from "./FinbarCard.vue";
+export { default as FinbarCalendarMonthPanel } from "./FinbarCalendarMonthPanel.vue";
+export { default as FinbarDateField } from "./FinbarDateField.vue";
 export { default as FinbarDialog } from "./FinbarDialog.vue";
 export { default as FinbarInput } from "./FinbarInput.vue";
 export { default as FinbarPageHeader } from "./FinbarPageHeader.vue";

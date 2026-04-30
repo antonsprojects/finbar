@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import TodayAddToolbarButton from "@/components/TodayAddToolbarButton.vue";
+import FinbarDateField from "@/components/ui/FinbarDateField.vue";
 import TodayModalShell from "@/components/ui/TodayModalShell.vue";
 import { formatLocalYmd } from "@/lib/localDate";
 import {
@@ -223,27 +224,23 @@ function openAddModal() {
               class="finbar-field-label"
               for="wap-pt-from"
             >Van</label>
-            <input
+            <FinbarDateField
               id="wap-pt-from"
               v-model="ptFrom"
-              type="date"
-              required
-              class="finbar-field-input w-full"
-            >
+              class="w-full"
+            />
           </div>
           <div>
             <label
               class="finbar-field-label"
               for="wap-pt-to"
             >Tot</label>
-            <input
+            <FinbarDateField
               id="wap-pt-to"
               v-model="ptTo"
-              type="date"
-              required
+              class="w-full"
               :min="ptFrom || undefined"
-              class="finbar-field-input w-full"
-            >
+            />
           </div>
         </div>
         <p

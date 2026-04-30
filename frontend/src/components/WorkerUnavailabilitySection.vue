@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import TodayAddToolbarButton from "@/components/TodayAddToolbarButton.vue";
+import FinbarDateField from "@/components/ui/FinbarDateField.vue";
 import TodayModalShell from "@/components/ui/TodayModalShell.vue";
 import {
   formatLocalYmd,
@@ -508,16 +509,14 @@ async function removeRecurringGroup(g: RecurringUnavailabilityGroup) {
           <div>
             <label
               class="finbar-field-label"
-              for="wu-modal-from"
+              for="wu-modal-from-single"
             >Datum</label>
-            <input
-              id="wu-modal-from"
+            <FinbarDateField
+              id="wu-modal-from-single"
               v-model="singleFrom"
-              type="date"
-              required
-              class="finbar-field-input w-full"
+              class="w-full"
               :min="minDateStr"
-            >
+            />
           </div>
         </div>
         <div
@@ -527,30 +526,26 @@ async function removeRecurringGroup(g: RecurringUnavailabilityGroup) {
           <div>
             <label
               class="finbar-field-label"
-              for="wu-modal-from"
+              for="wu-modal-from-range"
             >Van</label>
-            <input
-              id="wu-modal-from"
+            <FinbarDateField
+              id="wu-modal-from-range"
               v-model="singleFrom"
-              type="date"
-              required
-              class="finbar-field-input w-full"
+              class="w-full"
               :min="minDateStr"
-            >
+            />
           </div>
           <div>
             <label
               class="finbar-field-label"
               for="wu-modal-to"
             >Tot</label>
-            <input
+            <FinbarDateField
               id="wu-modal-to"
               v-model="singleTo"
-              type="date"
-              required
-              class="finbar-field-input w-full"
+              class="w-full"
               :min="singleFrom || minDateStr"
-            >
+            />
           </div>
         </div>
         <div>

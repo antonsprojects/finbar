@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import TodayModalShell from "@/components/ui/TodayModalShell.vue";
+import FinbarDateField from "@/components/ui/FinbarDateField.vue";
 import { fetchBegroting, type BudgetPhaseDto, type BudgetTodoDto } from "@/lib/budgetApi";
+import { inclusiveYmdRange } from "@/lib/localDate";
 import type { TodayAvailabilityRow, TodayTask } from "@/stores/today";
 import { useTasksStore } from "@/stores/tasks";
 import { useWorkersStore } from "@/stores/workers";
@@ -48,6 +50,9 @@ const editingTaskId = ref<string | null>(null);
 
 const title = ref("");
 const assignedWorkerIds = ref<string[]>([]);
+const scheduleMultipleDays = ref(false);
+const rangeFrom = ref(props.dateYmd);
+const rangeTo = ref(props.dateYmd);
 const pending = ref(false);
 const deletePending = ref(false);
 const formError = ref("");
@@ -288,6 +293,8 @@ watch(modalOpen, (v) => {
     formError.value = "";
     title.value = "";
     assignedWorkerIds.value = [];
+    scheduleMultipleDays.value = false;
+    resetRange();
     mode.value = "create";
     editingTaskId.value = null;
     budgetSearch.value = "";
@@ -299,8 +306,27 @@ watch(modalOpen, (v) => {
   }
 });
 
+watch(
+  () => props.dateYmd,
+  () => {
+    if (!modalOpen.value) resetRange();
+  },
+);
+
+/** Tot / einddatum nooit vóór start: kalender begint op startdag. */
+watch(rangeFrom, (from) => {
+  if (from && rangeTo.value && rangeTo.value < from) {
+    rangeTo.value = from;
+  }
+});
+
 function close() {
   modalOpen.value = false;
+}
+
+function resetRange() {
+  rangeFrom.value = props.dateYmd;
+  rangeTo.value = props.dateYmd;
 }
 
 function toggle() {
@@ -308,6 +334,8 @@ function toggle() {
   editingTaskId.value = null;
   title.value = "";
   assignedWorkerIds.value = [];
+  scheduleMultipleDays.value = false;
+  resetRange();
   formError.value = "";
   budgetSearch.value = "";
   selectedBudgetLineId.value = null;
@@ -320,6 +348,8 @@ function openCreate() {
   editingTaskId.value = null;
   title.value = "";
   assignedWorkerIds.value = [];
+  scheduleMultipleDays.value = false;
+  resetRange();
   formError.value = "";
   budgetSearch.value = "";
   selectedBudgetLineId.value = null;
@@ -332,6 +362,8 @@ function openEditFromRow(task: TodayTask) {
   editingTaskId.value = task.id;
   title.value = task.title;
   assignedWorkerIds.value = [...(task.assignedWorkerIds ?? [])];
+  scheduleMultipleDays.value = false;
+  resetRange();
   formError.value = "";
   modalOpen.value = true;
 }
@@ -374,6 +406,26 @@ async function submit() {
       "Deze taak is al op deze dag toegevoegd. Kies een andere regel.";
     return;
   }
+  if (
+    mode.value === "create" &&
+    scheduleMultipleDays.value &&
+    (!rangeFrom.value || !rangeTo.value)
+  ) {
+    formError.value = "Vul begindatum en einddatum in.";
+    return;
+  }
+  if (
+    mode.value === "create" &&
+    scheduleMultipleDays.value &&
+    rangeFrom.value > rangeTo.value
+  ) {
+    formError.value = "De begindatum moet op of vóór de einddatum liggen.";
+    return;
+  }
+  const dates =
+    mode.value === "create" && scheduleMultipleDays.value
+      ? inclusiveYmdRange(rangeFrom.value.trim(), rangeTo.value.trim())
+      : [props.dateYmd];
   pending.value = true;
   formError.value = "";
   try {
@@ -383,13 +435,15 @@ async function submit() {
         assignedWorkerIds: [...assignedWorkerIds.value],
       });
     } else {
-      await tasks.createTask({
-        jobId: props.projectId,
-        title: t,
-        scheduledDate: props.dateYmd,
-        assignedWorkerIds: [...assignedWorkerIds.value],
-        budgetLineId: selectedBudgetLineId.value ?? undefined,
-      });
+      for (const scheduledDate of dates) {
+        await tasks.createTask({
+          jobId: props.projectId,
+          title: t,
+          scheduledDate,
+          assignedWorkerIds: [...assignedWorkerIds.value],
+          budgetLineId: selectedBudgetLineId.value ?? undefined,
+        });
+      }
     }
     close();
     emit("created");
@@ -688,6 +742,49 @@ async function removeTask() {
           >
             {{ unavailableDaySummary }}
           </p>
+        </div>
+        <div
+          v-if="mode === 'create'"
+          class="space-y-3 border-t border-zinc-200 pt-4 dark:border-zinc-800"
+        >
+          <label
+            class="flex cursor-pointer items-center gap-2 text-sm text-zinc-800 dark:text-zinc-200"
+          >
+            <input
+              v-model="scheduleMultipleDays"
+              type="checkbox"
+              class="shrink-0 rounded border-zinc-300 text-zinc-900 dark:border-zinc-600"
+            >
+            <span>Voor meerdere dagen inplannen</span>
+          </label>
+          <div
+            v-if="scheduleMultipleDays"
+            class="grid gap-3 sm:grid-cols-2"
+          >
+            <div>
+              <label
+                class="finbar-field-label"
+                :for="`task-range-from-${dateYmd}`"
+              >Van</label>
+              <FinbarDateField
+                :id="`task-range-from-${dateYmd}`"
+                v-model="rangeFrom"
+                class="w-full"
+              />
+            </div>
+            <div>
+              <label
+                class="finbar-field-label"
+                :for="`task-range-to-${dateYmd}`"
+              >Tot</label>
+              <FinbarDateField
+                :id="`task-range-to-${dateYmd}`"
+                v-model="rangeTo"
+                class="w-full"
+                :min="rangeFrom || undefined"
+              />
+            </div>
+          </div>
         </div>
         <p
           v-if="formError"

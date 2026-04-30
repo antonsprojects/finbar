@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import TodayModalShell from "@/components/ui/TodayModalShell.vue";
+import FinbarDateField from "@/components/ui/FinbarDateField.vue";
+import { inclusiveYmdRange } from "@/lib/localDate";
 import type { TodayAvailabilityRow } from "@/stores/today";
 import type { Worker } from "@/stores/workers";
 import { useScheduleAssignmentsStore } from "@/stores/scheduleAssignments";
@@ -33,6 +35,9 @@ const workers = useWorkersStore();
 const schedule = useScheduleAssignmentsStore();
 
 const workerId = ref("");
+const scheduleMultipleDays = ref(false);
+const rangeFrom = ref(props.dateYmd);
+const rangeTo = ref(props.dateYmd);
 const pending = ref(false);
 const formError = ref("");
 
@@ -88,6 +93,22 @@ watch(modalOpen, (v) => {
   if (!v) {
     formError.value = "";
     workerId.value = "";
+    scheduleMultipleDays.value = false;
+    resetRange();
+  }
+});
+
+watch(
+  () => props.dateYmd,
+  () => {
+    if (!modalOpen.value) resetRange();
+  },
+);
+
+/** Tot / einddatum nooit vóór start: kalender begint op startdag. */
+watch(rangeFrom, (from) => {
+  if (from && rangeTo.value && rangeTo.value < from) {
+    rangeTo.value = from;
   }
 });
 
@@ -100,15 +121,24 @@ function close() {
   modalOpen.value = false;
 }
 
+function resetRange() {
+  rangeFrom.value = props.dateYmd;
+  rangeTo.value = props.dateYmd;
+}
+
 function toggle() {
   formError.value = "";
   workerId.value = "";
+  scheduleMultipleDays.value = false;
+  resetRange();
   modalOpen.value = !modalOpen.value;
 }
 
 function open() {
   formError.value = "";
   workerId.value = "";
+  scheduleMultipleDays.value = false;
+  resetRange();
   modalOpen.value = true;
 }
 
@@ -124,14 +154,27 @@ async function submit() {
     formError.value = "Dit teamlid is op deze dag niet beschikbaar";
     return;
   }
+  if (scheduleMultipleDays.value && (!rangeFrom.value || !rangeTo.value)) {
+    formError.value = "Vul begindatum en einddatum in.";
+    return;
+  }
+  if (scheduleMultipleDays.value && rangeFrom.value > rangeTo.value) {
+    formError.value = "De begindatum moet op of vóór de einddatum liggen.";
+    return;
+  }
+  const dates = scheduleMultipleDays.value
+    ? inclusiveYmdRange(rangeFrom.value.trim(), rangeTo.value.trim())
+    : [props.dateYmd];
   pending.value = true;
   formError.value = "";
   try {
-    await schedule.createAssignment({
-      workerId: workerId.value,
-      jobId: props.projectId,
-      date: props.dateYmd,
-    });
+    for (const date of dates) {
+      await schedule.createAssignment({
+        workerId: workerId.value,
+        jobId: props.projectId,
+        date,
+      });
+    }
     workerId.value = "";
     close();
     emit("added");
@@ -287,6 +330,48 @@ async function submit() {
               </li>
             </ul>
           </template>
+        </div>
+        <div
+          class="space-y-3 border-t border-zinc-200 pt-4 dark:border-zinc-800"
+        >
+          <label
+            class="flex cursor-pointer items-center gap-2 text-sm text-zinc-800 dark:text-zinc-200"
+          >
+            <input
+              v-model="scheduleMultipleDays"
+              type="checkbox"
+              class="shrink-0 rounded border-zinc-300 text-zinc-900 dark:border-zinc-600"
+            >
+            <span>Voor meerdere dagen inplannen</span>
+          </label>
+          <div
+            v-if="scheduleMultipleDays"
+            class="grid gap-3 sm:grid-cols-2"
+          >
+            <div>
+              <label
+                class="finbar-field-label"
+                :for="`crew-range-from-${dateYmd}`"
+              >Van</label>
+              <FinbarDateField
+                :id="`crew-range-from-${dateYmd}`"
+                v-model="rangeFrom"
+                class="w-full"
+              />
+            </div>
+            <div>
+              <label
+                class="finbar-field-label"
+                :for="`crew-range-to-${dateYmd}`"
+              >Tot</label>
+              <FinbarDateField
+                :id="`crew-range-to-${dateYmd}`"
+                v-model="rangeTo"
+                class="w-full"
+                :min="rangeFrom || undefined"
+              />
+            </div>
+          </div>
         </div>
         <p
           v-if="formError"
