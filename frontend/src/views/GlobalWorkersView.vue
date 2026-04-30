@@ -280,15 +280,15 @@ async function onWorkerCreated(w: Worker) {
           >
             <button
               type="button"
-              class="finbar-list-row !grid !min-h-12 !w-full !py-1.5 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-0 text-left text-zinc-900 sm:grid-cols-[11rem_minmax(0,1fr)_auto] sm:gap-x-4 sm:!py-2 dark:text-zinc-100"
+              class="finbar-list-row !grid !min-h-12 !w-full !py-1.5 grid-cols-[auto_minmax(0,1fr)] items-start gap-x-3 gap-y-0 text-left text-zinc-900 sm:grid-cols-[11rem_minmax(0,1fr)_auto] sm:items-center sm:gap-x-4 sm:!py-2 dark:text-zinc-100"
               @click="openWorkerEdit(w.id)"
             >
               <span
-                class="min-w-0 self-center pr-1 text-left font-medium [overflow-wrap:anywhere] sm:pr-3 sm:leading-snug sm:truncate"
+                class="self-start shrink-0 pr-1 text-left text-sm font-medium whitespace-nowrap sm:self-center sm:min-w-0 sm:truncate sm:pr-3 sm:leading-snug"
                 :title="w.name"
               >{{ w.name }}</span>
               <div
-                class="hidden min-h-0 w-full min-w-0 self-center sm:flex sm:items-center"
+                class="hidden min-h-0 w-full min-w-0 sm:flex sm:items-center"
               >
                 <WorkerTeamRuleBlock
                   :availability="teamDisplayRules[w.id]?.availability ?? null"
@@ -297,7 +297,7 @@ async function onWorkerCreated(w: Worker) {
               </div>
               <span
                 v-if="w.trade"
-                class="shrink-0 self-center text-right text-xs text-zinc-600 dark:text-zinc-500"
+                class="min-w-0 self-start break-words text-right text-xs [overflow-wrap:anywhere] text-zinc-600 sm:shrink-0 sm:self-center dark:text-zinc-500"
               >{{ w.trade }}</span>
             </button>
           </li>
