@@ -216,6 +216,12 @@ watch(projectId, () => {
             >
               Begroting
             </h1>
+            <p
+              v-if="phases.length"
+              class="text-sm tabular-nums text-zinc-600 dark:text-zinc-500"
+            >
+              {{ formatEur(projectTotalEur) }}
+            </p>
           </div>
           <div
             :class="[
@@ -227,15 +233,10 @@ watch(projectId, () => {
           >
             <div
               v-if="phases.length"
-              class="min-w-0 grow text-left max-md:min-w-0 md:shrink-0 md:text-right"
+              class="min-w-0 grow text-left max-md:min-w-0 md:hidden"
             >
               <p
-                class="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
-              >
-                Totaal
-              </p>
-              <p
-                class="text-base font-semibold tabular-nums text-zinc-900 dark:text-white"
+                class="text-sm tabular-nums text-zinc-600 dark:text-zinc-500"
               >
                 {{ formatEur(projectTotalEur) }}
               </p>
