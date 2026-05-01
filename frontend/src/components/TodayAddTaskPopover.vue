@@ -3,6 +3,7 @@ import TodayModalShell from "@/components/ui/TodayModalShell.vue";
 import FinbarDateField from "@/components/ui/FinbarDateField.vue";
 import { fetchBegroting, type BudgetPhaseDto, type BudgetTodoDto } from "@/lib/budgetApi";
 import { inclusiveYmdRange } from "@/lib/localDate";
+import { workerTradeSecondarySuffix } from "@/lib/workerTrades";
 import type { TodayAvailabilityRow, TodayTask } from "@/stores/today";
 import { useTasksStore } from "@/stores/tasks";
 import { useWorkersStore } from "@/stores/workers";
@@ -731,7 +732,7 @@ async function removeTask() {
                   "
                 >
                 <span>
-                  {{ w.name }}{{ w.trade ? ` — ${w.trade}` : "" }}
+                  {{ w.name }}{{ workerTradeSecondarySuffix(w.trades) }}
                 </span>
               </label>
             </template>

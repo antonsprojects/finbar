@@ -8,13 +8,26 @@ export type Worker = {
   lastName: string;
   /** Weergavenaam (voornaam + achternaam), afgeleid op de server. */
   name: string;
-  trade: string | null;
+  trades: string[];
   notes: string | null;
   createdAt: string;
   updatedAt: string;
 };
 
 type ApiErrorJson = { error?: { message?: string } };
+
+/** Runtime fallback als oude API nog `trade` teruggeeft (tijdens rollout). */
+function coerceWorker(row: Worker): Worker {
+  const anyRow = row as Worker & { trade?: string | null };
+  let trades = Array.isArray(row.trades) ? [...row.trades] : [];
+  if (trades.length === 0 && typeof anyRow.trade === "string" && anyRow.trade.trim()) {
+    trades = anyRow.trade
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+  }
+  return { ...row, trades };
+}
 
 function readApiErrorMessage(json: unknown): string | undefined {
   if (!json || typeof json !== "object") return undefined;
@@ -45,7 +58,8 @@ export const useWorkersStore = defineStore("workers", () => {
       const payload = data as {
         data?: { items?: Worker[] };
       };
-      list.value = payload.data?.items ?? [];
+      const items = payload.data?.items ?? [];
+      list.value = items.map(coerceWorker);
     } catch (e) {
       list.value = [];
       listError.value =
@@ -62,13 +76,14 @@ export const useWorkersStore = defineStore("workers", () => {
       throw new Error(readApiErrorMessage(data) ?? "Teamlid niet gevonden");
     }
     const payload = data as { data?: { worker: Worker } };
-    return payload.data?.worker ?? null;
+    const w = payload.data?.worker ?? null;
+    return w ? coerceWorker(w) : null;
   }
 
   async function createWorker(input: {
     firstName: string;
     lastName?: string;
-    trade?: string | null;
+    trades?: string[];
     notes?: string | null;
   }): Promise<Worker> {
     const r = await fetch("/api/workers", {
@@ -85,7 +100,7 @@ export const useWorkersStore = defineStore("workers", () => {
     if (!payload.data?.worker) {
       throw new Error("Ongeldig antwoord");
     }
-    return payload.data.worker;
+    return coerceWorker(payload.data.worker);
   }
 
   async function updateWorker(
@@ -93,7 +108,7 @@ export const useWorkersStore = defineStore("workers", () => {
     patch: Partial<{
       firstName: string;
       lastName: string;
-      trade: string | null;
+      trades: string[];
       notes: string | null;
     }>,
   ): Promise<Worker> {
@@ -111,7 +126,7 @@ export const useWorkersStore = defineStore("workers", () => {
     if (!payload.data?.worker) {
       throw new Error("Ongeldig antwoord");
     }
-    return payload.data.worker;
+    return coerceWorker(payload.data.worker);
   }
 
   /**
@@ -122,9 +137,21 @@ export const useWorkersStore = defineStore("workers", () => {
     const rows = excludeWorkerId
       ? list.value.filter((w) => w.id !== excludeWorkerId)
       : list.value;
-    return rows
-      .map((w) => w.trade?.trim() ?? "")
-      .filter((t): t is string => t.length > 0);
+    const seen = new Set<string>();
+    const out: string[] = [];
+    for (const w of rows) {
+      for (const raw of w.trades ?? []) {
+        const t = raw.trim();
+        if (!t) continue;
+        const k = t.toLocaleLowerCase("nl-NL");
+        if (seen.has(k)) continue;
+        seen.add(k);
+        out.push(t);
+      }
+    }
+    return out.sort((a, b) =>
+      a.localeCompare(b, "nl", { sensitivity: "base" }),
+    );
   }
 
   return {

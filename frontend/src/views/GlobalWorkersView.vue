@@ -7,6 +7,7 @@ import {
   fetchTeamDisplayRules,
   type TeamDisplayRule,
 } from "@/lib/teamDisplayRulesApi";
+import { formatWorkerTradesLabel } from "@/lib/workerTrades";
 import type { Worker } from "@/stores/workers";
 import { useWorkersStore } from "@/stores/workers";
 import { computed, onMounted, ref, watch } from "vue";
@@ -29,7 +30,13 @@ const filteredWorkerList = computed(() => {
   const q = contactSearch.value.trim().toLowerCase();
   if (!q) return workerList.value;
   return workerList.value.filter((w) => {
-    const blob = [w.name, w.firstName, w.lastName, w.trade ?? "", w.notes ?? ""]
+    const blob = [
+      w.name,
+      w.firstName,
+      w.lastName,
+      ...(w.trades ?? []),
+      w.notes ?? "",
+    ]
       .join(" ")
       .toLowerCase();
     return blob.includes(q);
@@ -296,9 +303,9 @@ async function onWorkerCreated(w: Worker) {
                 />
               </div>
               <span
-                v-if="w.trade"
+                v-if="w.trades?.length"
                 class="min-w-0 self-start break-words text-right text-xs [overflow-wrap:anywhere] text-zinc-600 sm:shrink-0 sm:self-center dark:text-zinc-500"
-              >{{ w.trade }}</span>
+              >{{ formatWorkerTradesLabel(w.trades) }}</span>
             </button>
           </li>
         </ul>

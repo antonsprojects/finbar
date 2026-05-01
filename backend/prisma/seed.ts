@@ -16,7 +16,8 @@ async function main() {
     data: {
       email: "demo@finbar.local",
       passwordHash,
-      name: "Demo",
+      firstName: "Demo",
+      lastName: "",
     },
   });
 
@@ -25,7 +26,7 @@ async function main() {
       userId: user.id,
       firstName: "Jan",
       lastName: "de Vries",
-      trade: "Tegelzetter",
+      trades: ["Tegelzetter"],
     },
   });
 
@@ -34,7 +35,7 @@ async function main() {
       userId: user.id,
       firstName: "Piet",
       lastName: "Jansen",
-      trade: "Stucadoor",
+      trades: ["Stucadoor"],
     },
   });
 

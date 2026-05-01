@@ -16,7 +16,7 @@ All business rows are owned by a single **User** account (Finbar today; multi-te
 | --- | --- |
 | **User** | Account: email, auth material, profile fields as needed. |
 | **Job** | Renovation job/site: name, address, status, notes. |
-| **Worker** | Freelancer or crew member: contact, trade, notes. |
+| **Worker** | Freelancer or crew member: contact, vakgebieden (`trades`), notes. |
 | **Task** | Work item, usually tied to a job; status; optional `assignedWorkerId`; optional `scheduledDate`. |
 | **ScheduleAssignment** | **Who works which job on which calendar day**—separate from task assignment. |
 | **WorkerAvailability** | Per worker per date: **`AVAILABLE` \| `UNAVAILABLE`** only (not “booked”). |

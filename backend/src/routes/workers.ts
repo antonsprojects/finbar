@@ -10,21 +10,31 @@ import { getEffectiveUserId } from "../lib/auth-context.js";
 import { HttpError } from "../lib/http-error.js";
 import { listResponse, paginationQuerySchema } from "../lib/pagination.js";
 import { prisma } from "../lib/prisma.js";
+import {
+  WORKER_TRADE_MAX_LEN,
+  WORKER_TRADES_MAX_COUNT,
+  normalizeWorkerTradesInput,
+} from "../lib/workerTrades.js";
 import { buildTeamDisplayRule } from "../lib/workerTeamDisplay.js";
 import { workerDisplayName } from "../lib/workerName.js";
 import { parseBody, parseQuery } from "../lib/validate.js";
 
+const tradesSchema = z
+  .array(z.string().max(WORKER_TRADE_MAX_LEN))
+  .max(WORKER_TRADES_MAX_COUNT)
+  .optional();
+
 const createWorkerBody = z.object({
   firstName: z.string().min(1).max(200),
   lastName: z.string().max(200).optional().default(""),
-  trade: z.string().max(500).nullable().optional(),
+  trades: tradesSchema,
   notes: z.string().max(10000).nullable().optional(),
 });
 
 const updateWorkerBody = z.object({
   firstName: z.string().min(1).max(200).optional(),
   lastName: z.string().max(200).optional(),
-  trade: z.string().max(500).nullable().optional(),
+  trades: tradesSchema,
   notes: z.string().max(10000).nullable().optional(),
 });
 
@@ -49,7 +59,7 @@ function workerJson(w: Worker) {
     firstName: w.firstName,
     lastName: w.lastName,
     name: workerDisplayName(w),
-    trade: w.trade,
+    trades: [...w.trades],
     notes: w.notes,
     createdAt: w.createdAt.toISOString(),
     updatedAt: w.updatedAt.toISOString(),
@@ -250,7 +260,7 @@ export const workerRoutes: FastifyPluginAsync = async (app) => {
         userId,
         firstName: body.firstName,
         lastName: body.lastName,
-        trade: body.trade ?? null,
+        trades: normalizeWorkerTradesInput(body.trades ?? []),
         notes: body.notes ?? null,
       },
     });
@@ -288,7 +298,9 @@ export const workerRoutes: FastifyPluginAsync = async (app) => {
       data: {
         ...(body.firstName !== undefined ? { firstName: body.firstName } : {}),
         ...(body.lastName !== undefined ? { lastName: body.lastName } : {}),
-        ...(body.trade !== undefined ? { trade: body.trade } : {}),
+        ...(body.trades !== undefined
+          ? { trades: normalizeWorkerTradesInput(body.trades) }
+          : {}),
         ...(body.notes !== undefined ? { notes: body.notes } : {}),
       },
     });

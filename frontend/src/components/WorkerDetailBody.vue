@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import WorkerGegevensProjecten from "@/components/WorkerGegevensProjecten.vue";
 import WorkerTradeInput from "@/components/WorkerTradeInput.vue";
+import { normalizeWorkerTradesForSubmit } from "@/lib/workerTrades";
 import WorkerAvailabilityPeriodsSection from "@/components/WorkerAvailabilityPeriodsSection.vue";
 import WorkerUnavailabilitySection from "@/components/WorkerUnavailabilitySection.vue";
 import {
@@ -39,7 +40,7 @@ const error = ref("");
 
 const firstName = ref("");
 const lastName = ref("");
-const trade = ref("");
+const trades = ref<string[]>([]);
 const notes = ref("");
 
 const tradeSuggestions = computed(() =>
@@ -83,7 +84,7 @@ async function load() {
     if (w) {
       firstName.value = w.firstName;
       lastName.value = w.lastName;
-      trade.value = w.trade ?? "";
+      trades.value = [...(w.trades ?? [])];
       notes.value = w.notes ?? "";
     }
   } catch (e) {
@@ -133,7 +134,7 @@ async function save() {
     const updated = await workers.updateWorker(props.workerId, {
       firstName: firstName.value.trim(),
       lastName: lastName.value.trim(),
-      trade: trade.value.trim() || null,
+      trades: normalizeWorkerTradesForSubmit(trades.value),
     });
     worker.value = updated;
     emit("updated");
@@ -373,7 +374,7 @@ watch(activeMain, (t) => {
               </div>
             </div>
             <WorkerTradeInput
-              v-model="trade"
+              v-model="trades"
               input-id="wdb-trade"
               :suggestions="tradeSuggestions"
             />

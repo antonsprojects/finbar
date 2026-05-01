@@ -88,7 +88,7 @@ Base path: **`/api/workers`** (session cookie required).
 | `GET` | `/api/workers` | List workers (`limit`, `offset`) |
 | `POST` | `/api/workers` | Create worker |
 | `GET` | `/api/workers/:id` | Worker detail |
-| `PATCH` | `/api/workers/:id` | Update worker (name, phone, trade, notes) |
+| `PATCH` | `/api/workers/:id` | Update worker (name, `trades[]`, notes) |
 
 ## Tasks (authenticated)
 

@@ -134,7 +134,8 @@ model Worker {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   firstName String
   lastName  String   @default("")
-  trade     String?
+  /// Vakgebieden / tags (los van elkaar; legacy comma-separated values bij migratie gesplitst).
+  trades    String[] @default([])
   notes     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

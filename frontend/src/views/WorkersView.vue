@@ -8,6 +8,7 @@ import {
   fetchTeamDisplayRules,
   type TeamDisplayRule,
 } from "@/lib/teamDisplayRulesApi";
+import { formatWorkerTradesLabel } from "@/lib/workerTrades";
 import { useJobsStore } from "@/stores/jobs";
 import type { Worker } from "@/stores/workers";
 import { useWorkersStore } from "@/stores/workers";
@@ -248,9 +249,9 @@ async function onWorkerEditUpdated() {
                 />
               </div>
               <span
-                v-if="w.trade"
+                v-if="w.trades?.length"
                 class="min-w-0 self-start break-words text-right text-xs [overflow-wrap:anywhere] text-zinc-600 sm:shrink-0 sm:self-center dark:text-zinc-500"
-              >{{ w.trade }}</span>
+              >{{ formatWorkerTradesLabel(w.trades) }}</span>
             </button>
           </li>
         </ul>

@@ -1,5 +1,9 @@
 <script setup lang="ts">
 import { removeWorkerFromScheduleJob } from "@/lib/workerScheduleJobsApi";
+import {
+  formatWorkerTradesLabel,
+  workerHasTradeMatch,
+} from "@/lib/workerTrades";
 import { useJobsStore } from "@/stores/jobs";
 import { useScheduleAssignmentsStore } from "@/stores/scheduleAssignments";
 import { useWorkersStore } from "@/stores/workers";
@@ -115,7 +119,7 @@ const filteredNetworkRows = computed(() => {
   if (!q) return list;
   return list.filter((w) => {
     if (w.name.toLowerCase().includes(q)) return true;
-    if (w.trade && w.trade.toLowerCase().includes(q)) return true;
+    if (workerHasTradeMatch(w.trades, q)) return true;
     return false;
   });
 });
@@ -332,9 +336,10 @@ defineExpose({
                 class="flex min-w-0 shrink-0 items-center gap-2 pl-1"
               >
                 <span
-                  v-if="w.trade"
+                  v-if="w.trades?.length"
                   class="max-w-[9rem] truncate text-right text-xs text-zinc-500 sm:max-w-[12rem] dark:text-zinc-400"
-                >{{ w.trade }}</span>
+                  :title="formatWorkerTradesLabel(w.trades)"
+                >{{ formatWorkerTradesLabel(w.trades) }}</span>
                 <button
                   v-if="!isOnProject(w.id)"
                   type="button"

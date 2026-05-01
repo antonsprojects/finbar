@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import WorkerTradeInput from "@/components/WorkerTradeInput.vue";
+import { normalizeWorkerTradesForSubmit } from "@/lib/workerTrades";
 import type { Worker } from "@/stores/workers";
 import { useWorkersStore } from "@/stores/workers";
 import { computed, onMounted, ref } from "vue";
@@ -14,7 +15,7 @@ const workers = useWorkersStore();
 
 const firstName = ref("");
 const lastName = ref("");
-const trade = ref("");
+const trades = ref<string[]>([]);
 const notes = ref("");
 const error = ref("");
 const loading = ref(false);
@@ -32,7 +33,7 @@ async function onSubmit() {
     const w = await workers.createWorker({
       firstName: firstName.value.trim(),
       lastName: lastName.value.trim(),
-      trade: trade.value.trim() || null,
+      trades: normalizeWorkerTradesForSubmit(trades.value),
       notes: notes.value.trim() || null,
     });
     emit("success", w);
@@ -81,7 +82,7 @@ async function onSubmit() {
       </div>
     </div>
     <WorkerTradeInput
-      v-model="trade"
+      v-model="trades"
       input-id="wn-trade"
       :suggestions="tradeSuggestions"
     />

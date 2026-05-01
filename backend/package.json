@@ -17,6 +17,7 @@
     "db:deploy": "prisma migrate deploy",
     "db:seed": "prisma db seed",
     "admin:create": "tsx scripts/create-admin.ts",
+    "import:budget": "tsx scripts/import-budget-csv.ts",
     "typecheck": "tsc --noEmit"
   },
   "prisma": {

@@ -2,6 +2,7 @@
 import TodayModalShell from "@/components/ui/TodayModalShell.vue";
 import FinbarDateField from "@/components/ui/FinbarDateField.vue";
 import { inclusiveYmdRange } from "@/lib/localDate";
+import { workerTradeSecondarySuffix } from "@/lib/workerTrades";
 import type { TodayAvailabilityRow } from "@/stores/today";
 import type { Worker } from "@/stores/workers";
 import { useScheduleAssignmentsStore } from "@/stores/scheduleAssignments";
@@ -62,7 +63,7 @@ const notScheduledWorkers = computed(() =>
 );
 
 function workerLabel(w: Worker): string {
-  return `${w.name}${w.trade ? ` — ${w.trade}` : ""}`;
+  return `${w.name}${workerTradeSecondarySuffix(w.trades)}`;
 }
 
 const workersAvailableToAdd = computed(() =>

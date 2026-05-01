@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import FinbarDateField from "@/components/ui/FinbarDateField.vue";
+import { workerTradeSecondarySuffix } from "@/lib/workerTrades";
 import { TASK_STATUS_LABELS, type TaskStatus, useTasksStore } from "@/stores/tasks";
 import { useWorkersStore } from "@/stores/workers";
 import { useJobsStore } from "@/stores/jobs";
@@ -193,7 +194,7 @@ async function onSubmit() {
                   )
                 "
               >
-              <span>{{ w.name }}{{ w.trade ? ` — ${w.trade}` : "" }}</span>
+              <span>{{ w.name }}{{ workerTradeSecondarySuffix(w.trades) }}</span>
             </label>
           </template>
         </div>

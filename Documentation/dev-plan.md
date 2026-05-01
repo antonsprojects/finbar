@@ -250,7 +250,7 @@ Define the first usable relational model.
 - userId
 - name
 - phone
-- trade
+- trades (vakgebieden)
 - notes
 - createdAt
 - updatedAt
@@ -427,7 +427,7 @@ Implement worker management.
 - Support basic fields:
   - name
   - phone
-  - trade
+  - trades (vakgebieden)
   - notes
 
 ## Deliverables
